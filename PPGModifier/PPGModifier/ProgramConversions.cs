@@ -15,12 +15,9 @@ namespace ToddUtils
     {
       string numberFormat = "F6";
 
-
       double minSpacing = 10.0; // Minimum distance to trigger a print of the line
       double minAngleChange = 10.0; // Minimum angle change to trigger a print of the line
       bool remove_courseRetract = false;
-
-
       numberFormat = options.NumberFormat;
       minSpacing = options.MinSpacing;
       minAngleChange = options.MinAngleChange;
