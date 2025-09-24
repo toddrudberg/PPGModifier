@@ -27,7 +27,8 @@ namespace PPGModifier
       InitializeComponent();
 
       // Put form in upper-left half of primary screen
-      var wa = Screen.PrimaryScreen.WorkingArea;
+      // var wa = Screen.PrimaryScreen.WorkingArea;
+      var wa = Screen.FromPoint(Cursor.Position).WorkingArea;
       StartPosition = FormStartPosition.Manual;
       Left = wa.Left;
       Top = wa.Top;
@@ -57,7 +58,8 @@ namespace PPGModifier
       var cw = GetConsoleWindow();
       if (cw == IntPtr.Zero) return;
 
-      var wa = Screen.PrimaryScreen.WorkingArea;
+      //var wa = Screen.PrimaryScreen.WorkingArea;
+      var wa = Screen.FromPoint(Cursor.Position).WorkingArea;
       int x = wa.Left + wa.Width / 2;
       int y = wa.Top;
       int w = wa.Width / 2;

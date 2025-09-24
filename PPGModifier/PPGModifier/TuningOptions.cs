@@ -42,16 +42,53 @@ namespace PPGModifier
       return System.Text.Json.JsonSerializer.Deserialize<ProgramTuningOptions>(json)!;
     }
 
+    protected override void OnLoad(EventArgs e)
+    {
+      base.OnLoad(e);
+      EnsureOnScreen(this);
+      ForceVisible(this);
+    }
 
-    //existing
-    //public TuningDialog()
-    //{
-    //  InitializeComponent();
-    //}
+    static void EnsureOnScreen(Form f)
+    {
+      var r = f.Bounds;
+      var screen = Screen.FromRectangle(r).WorkingArea;
+      int nx = Math.Max(screen.Left, Math.Min(r.Left, screen.Right - f.Width));
+      int ny = Math.Max(screen.Top, Math.Min(r.Top, screen.Bottom - f.Height));
+      f.Location = new Point(nx, ny);
+    }
+    static void ForceVisible(Form f)
+    {
+      f.WindowState = FormWindowState.Normal;
+      f.Opacity = 1;
+      f.ShowInTaskbar = false;
+
+      // Clamp to ANY connected screen
+      var union = Screen.AllScreens.Select(s => s.WorkingArea)
+                                   .Aggregate(Rectangle.Union);
+      var b = f.Bounds;
+
+      int x = Math.Max(union.Left, Math.Min(b.Left, union.Right - b.Width));
+      int y = Math.Max(union.Top, Math.Min(b.Top, union.Bottom - b.Height));
+      if (x != b.Left || y != b.Top) f.Location = new Point(x, y);
+
+      // If still no intersection (e.g., zero size), center on primary with sane size
+      if (!Screen.AllScreens.Any(s => s.WorkingArea.IntersectsWith(f.Bounds)))
+      {
+        var wa = Screen.PrimaryScreen.WorkingArea;
+        f.Size = new Size(Math.Min(900, wa.Width - 100), Math.Min(650, wa.Height - 100));
+        f.Location = new Point(wa.Left + (wa.Width - f.Width) / 2,
+                               wa.Top + (wa.Height - f.Height) / 2);
+      }
+
+      f.TopMost = true;      // temporary: ensure it’s above the main form
+      f.Activate();
+      f.BringToFront();
+    }
 
     private void TuningDialog_Load(object sender, EventArgs e)
     {
-
+      this.StartPosition = FormStartPosition.CenterParent;
     }
   }
 }

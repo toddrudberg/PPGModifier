@@ -237,8 +237,8 @@ namespace ToddUtils
               }
               else if (line.Contains("F="))
               {
-                  fp.GetArgument(line, "F=", out double feedrate, false);
-                  output[nFeedLine] += $"\nF={feedrate:F1} ; set feedrate for course";
+                fp.GetArgument(line, "F=", out double feedrate, false);
+                output[nFeedLine] += $"\nF={feedrate:F1} ; set feedrate for course";
               }
             }
             //else
