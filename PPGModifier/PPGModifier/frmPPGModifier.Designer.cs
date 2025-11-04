@@ -29,24 +29,38 @@
     private void InitializeComponent()
     {
       btnDoIt = new Button();
+      btnDecoupleROTX = new Button();
       SuspendLayout();
       // 
       // btnDoIt
       // 
-      btnDoIt.Location = new Point(384, 572);
+      btnDoIt.Location = new Point(158, 209);
+      btnDoIt.Margin = new Padding(1, 1, 1, 1);
       btnDoIt.Name = "btnDoIt";
-      btnDoIt.Size = new Size(803, 111);
+      btnDoIt.Size = new Size(331, 41);
       btnDoIt.TabIndex = 0;
       btnDoIt.Text = "Do The Thing";
       btnDoIt.UseVisualStyleBackColor = true;
       btnDoIt.Click += btnDoIt_Click;
       // 
+      // btnDecoupleROTX
+      // 
+      btnDecoupleROTX.Location = new Point(158, 254);
+      btnDecoupleROTX.Name = "btnDecoupleROTX";
+      btnDecoupleROTX.Size = new Size(331, 39);
+      btnDecoupleROTX.TabIndex = 1;
+      btnDecoupleROTX.Text = "Decouple ROTX";
+      btnDecoupleROTX.UseVisualStyleBackColor = true;
+      btnDecoupleROTX.Click += btnDecoupleROTX_Click;
+      // 
       // frmPPGModifier
       // 
-      AutoScaleDimensions = new SizeF(17F, 41F);
+      AutoScaleDimensions = new SizeF(7F, 15F);
       AutoScaleMode = AutoScaleMode.Font;
-      ClientSize = new Size(1712, 1027);
+      ClientSize = new Size(705, 376);
+      Controls.Add(btnDecoupleROTX);
       Controls.Add(btnDoIt);
+      Margin = new Padding(1, 1, 1, 1);
       Name = "frmPPGModifier";
       Text = "Form1";
       Load += frmPPGModifier_Load;
@@ -56,5 +70,6 @@
     #endregion
 
     private Button btnDoIt;
+    private Button btnDecoupleROTX;
   }
 }

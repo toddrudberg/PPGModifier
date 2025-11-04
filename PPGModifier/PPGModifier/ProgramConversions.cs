@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ToddUtils.SiemensCCIMotionVariables;
 using ToddUtils.LHT;
+using ToddUtils.SiemensCCIMotionVariables;
+using static System.Net.Mime.MediaTypeNames;
 
 
 namespace ToddUtils
@@ -167,7 +168,8 @@ namespace ToddUtils
           {
             output.Add("STOPRE");
             output.Add(line);
-            output.Add("G644 ;  good for smoothish parts, need to evaluate for rectangular parts");
+            //output.Add("G644 ;  good for smoothish parts, need to evaluate for rectangular parts");
+            output.Add("G645 ;  good for smoothish parts, need to evaluate for rectangular parts");
           }
 
           //deal with SET_PATH_ACCEL
@@ -326,6 +328,74 @@ namespace ToddUtils
         Clipboard.SetText(text);
         Console.WriteLine("Output copied to clipboard.");
       }
+    }
+
+    internal static void decoupleROTX(string fileName, string outputFileName)
+    {
+      List<string> lines = File.ReadAllLines(fileName).ToList();
+      List<string> result = new List<string>();
+
+      /*
+        N47 G1 X=-281.244180 Y=27.077910 Z=26.973910 RX=-45.000000 RY=0.000000 RZ=134.998034 ROTX=DC(-45.000000)
+        N48 G9 X=-281.244180 Y=27.077910 Z=26.973910 RX=-45.000000 RY=0.000000 RZ=134.998034 ROTX=DC(-45.000000) DIST=0.000
+        FGREF[ROTX]=50.12 F1200
+      */
+
+      cMotionArguments arguments = new cMotionArguments();
+
+      for (int ii = 0; ii < lines.Count; ii++)
+      {
+        string line = lines[ii];
+        if (line.Contains("G1") || line.Contains("G9"))
+        {
+          arguments = cMotionArguments.getMotionArguments(line);
+          //if (arguments.ROTX != 0)
+          {
+            cPose robotPose = new cPose();
+            robotPose.X = arguments.X;
+            robotPose.Y = arguments.Y;
+            robotPose.Z = arguments.Z;
+            robotPose.rX = arguments.RX;
+            robotPose.rY = arguments.RY;
+            robotPose.rZ = arguments.RZ;
+
+            cLHT lhtRobot = new cLHT();
+            lhtRobot.setTransformFromEulerXYZ(robotPose);
+
+            cLHT lhtRotX = new cLHT();
+            lhtRotX.setTransformFromEulerXYZ(new cPose() { rX = -arguments.ROTX });
+            cLHT lhtNew = lhtRotX * lhtRobot;
+            cPose newPose = lhtNew.getPoseEulerXYZ();
+            double radius = Math.Sqrt(newPose.y * newPose.y + newPose.z * newPose.z);
+
+            ToddUtils.FileParser.cFileParse fp = new ToddUtils.FileParser.cFileParse();
+            fp.ReplaceArgument(line, "X=", newPose.X, out line, "F6");
+            fp.ReplaceArgument(line, "Y=", newPose.Y, out line, "F6");
+            fp.ReplaceArgument(line, "Z=", newPose.Z, out line, "F6");
+            fp.ReplaceArgument(line, "RX=", newPose.rX, out line, "F6");
+            fp.ReplaceArgument(line, "RY=", newPose.rY, out line, "F6");
+            fp.ReplaceArgument(line, "RZ=", newPose.rZ, out line, "F6");
+
+            int n = line.IndexOf("ROTX=DC");
+            if (n != -1)
+            {
+              int nend = line.IndexOf(")");
+              //line = line.Insert(n, $"FGREF[ROTX]={radius:F3} ");
+              string bullshit = line.Substring(n, nend - n + 1);
+              line = line.Replace(bullshit, $"ROTX={arguments.ROTX:F3}");
+            }
+
+            result.Add(line);
+          }
+        }
+        else
+        {
+          result.Add(line);
+        }
+      }
+      string text = string.Join(Environment.NewLine, result);
+      File.WriteAllText(outputFileName, text);
+      Console.WriteLine($"Output written to {outputFileName}");
     }
   }
 }

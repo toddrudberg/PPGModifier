@@ -113,5 +113,27 @@ namespace PPGModifier
       Directory.CreateDirectory(Path.GetDirectoryName(ConfigPath)!);
       _opts = ProgramTuningOptions.Load(ConfigPath);
     }
+
+    private void btnDecoupleROTX_Click(object sender, EventArgs e)
+    {
+      this.Enabled = false;
+
+
+      OpenFileDialog ofd = new OpenFileDialog();
+      ofd.Filter = "GCode files (*.mpf)|*.mpf|All files (*.*)|*.*";
+      ofd.Title = "Select GCode File";
+      if (ofd.ShowDialog() != DialogResult.OK)
+      {
+        MessageBox.Show("No file selected.");
+        this.Enabled = true;
+        return;
+      }
+      // Write the output lines to a new file
+      string directory = Path.GetDirectoryName(ofd.FileName);
+      string filenameWithoutExt = Path.GetFileNameWithoutExtension(ofd.FileName);
+      string outputFileName = Path.Combine(directory, filenameWithoutExt + "_rotx.mpf");
+      ProgramConversions.decoupleROTX(ofd.FileName, outputFileName);
+      this.Enabled = true;
+    }
   }
 }
