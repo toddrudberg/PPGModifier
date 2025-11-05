@@ -35,7 +35,7 @@
       // btnDoIt
       // 
       btnDoIt.Location = new Point(158, 209);
-      btnDoIt.Margin = new Padding(1, 1, 1, 1);
+      btnDoIt.Margin = new Padding(1);
       btnDoIt.Name = "btnDoIt";
       btnDoIt.Size = new Size(331, 41);
       btnDoIt.TabIndex = 0;
@@ -45,7 +45,7 @@
       // 
       // btnDecoupleROTX
       // 
-      btnDecoupleROTX.Location = new Point(158, 254);
+      btnDecoupleROTX.Location = new Point(158, 270);
       btnDecoupleROTX.Name = "btnDecoupleROTX";
       btnDecoupleROTX.Size = new Size(331, 39);
       btnDecoupleROTX.TabIndex = 1;
@@ -60,7 +60,7 @@
       ClientSize = new Size(705, 376);
       Controls.Add(btnDecoupleROTX);
       Controls.Add(btnDoIt);
-      Margin = new Padding(1, 1, 1, 1);
+      Margin = new Padding(1);
       Name = "frmPPGModifier";
       Text = "Form1";
       Load += frmPPGModifier_Load;

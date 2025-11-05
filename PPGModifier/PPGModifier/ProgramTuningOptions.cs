@@ -16,6 +16,14 @@ public sealed class ProgramTuningOptions
   [DefaultValue(10.0)]
   public double MinAngleChange { get; set; } = 10.0;
 
+  [Category("Feed Rates"), DisplayName("On Course Feedrate (mm/min)"), Description("How fast do you want to print?")]
+  [DefaultValue(24000)]
+  public double OnCourseFeedRate { get; set; } = 24000;
+
+  [Category("Feed Rates"), DisplayName("Transit Feedrate (mm/min)"), Description("How fast do you rapid traverse?")]
+  [DefaultValue(30000)]
+  public double TransitFeedRate { get; set; } = 30000;
+
   [Category("Logic"), DisplayName("Remove courseRetract")]
   [DefaultValue(false)]
   public bool Remove_courseRetract { get; set; } = false;

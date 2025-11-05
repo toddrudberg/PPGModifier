@@ -18,15 +18,16 @@ namespace ToddUtils
 
       double minSpacing = 10.0; // Minimum distance to trigger a print of the line
       double minAngleChange = 10.0; // Minimum angle change to trigger a print of the line
+      double onCourseFeedRate = 24000.0;
+      double transitFeedRate = 30000.0;
       bool remove_courseRetract = false;
 
       numberFormat = options.NumberFormat;
       minSpacing = options.MinSpacing;
       minAngleChange = options.MinAngleChange;
+      onCourseFeedRate = options.OnCourseFeedRate;
+      transitFeedRate = options.TransitFeedRate;
       remove_courseRetract = options.Remove_courseRetract;
-
-
-
 
       long count = 0;
       ToddUtils.FileParser.cFileParse fp = new ToddUtils.FileParser.cFileParse();
@@ -82,27 +83,17 @@ namespace ToddUtils
               state++;
             break;
           case 2:
+
             if (line.Contains("SET_PATH_ACCEL"))
             {
               output.Add("G645");
-              state++;
             }
-            if (!remove_courseRetract)
-              state = 0;
-            break;
-          case 3:
-            if (line.Contains("EXIT_PRINT"))
+            else if (line.Contains("F="))
             {
-              state++;
-              continue;
-            }
-            break;
-          case 4:
-            if (line.Contains("SKIP_EXIT:"))
-            {
+              output.Add($"F={transitFeedRate:F1} ; set feedrate for transit");
               state = 0;
             }
-            continue;
+
             break;
         }
 
@@ -241,7 +232,7 @@ namespace ToddUtils
               else if (line.Contains("F="))
               {
                 fp.GetArgument(line, "F=", out double feedrate, false);
-                output[nFeedLine] += $"\nF={feedrate:F1} ; set feedrate for course";
+                output[nFeedLine] += $"\nF={onCourseFeedRate:F1} ; set feedrate for course";
               }
             }
             //else
@@ -273,6 +264,13 @@ namespace ToddUtils
 
       output.Clear();
       output = flattened;
+
+      // apply the Ultimate Reality Path
+      if (options.Remove_courseRetract)
+      {
+        List<string> URP = new List<string>(output);
+        output = DoURP(URP);
+      }
 
       for (int i = 0; i < output.Count; i++)
       {
@@ -315,6 +313,10 @@ namespace ToddUtils
         }
       }
 
+
+
+
+
       //output the resutlts:
       string text = string.Join(Environment.NewLine, outputRenumbered);
       if (!string.IsNullOrEmpty(outputFileName))
@@ -328,6 +330,141 @@ namespace ToddUtils
         Clipboard.SetText(text);
         Console.WriteLine("Output copied to clipboard.");
       }
+    }
+
+    private static List<string> DoURP(List<string> uRP)
+    {
+      int state = 0;
+      string sStartOfCourse = "";
+      List<string> result = new List<string>();
+      double startDistCommand = 0;
+      ToddUtils.FileParser.cFileParse fp = new ToddUtils.FileParser.cFileParse();
+      for (int i = 0; i < uRP.Count; i++)
+      {
+
+        string line = uRP[i];
+        switch (state)
+        {
+          case 0:
+            result.Add(line);
+            if (line.Contains("APPROACH"))
+            {
+              sStartOfCourse = "";
+              state++;
+            }
+            break;
+
+          case 1:
+            string case1Line = line;
+            if (line.Contains("G1")) //this is the approach line
+            {
+              case1Line = line + " ; beginning of approach";
+              state++;
+            }
+            result.Add(case1Line);
+            break;
+
+          case 2: //looking for end of course synchronous actions
+            string case2Line = line;
+            bool case2ExtraneousFR = false;
+            if (line.Contains("G9"))
+            {
+              sStartOfCourse = line.Replace("G9", "G1");
+              fp.GetArgument(line, "DIST=", out startDistCommand, false);
+              break;
+            }
+            else if (line.Contains("G1"))
+            {
+              break;
+            }
+            else if (line.Contains("STOPRE"))
+            {
+              break;
+            }
+            else if (line.Contains("FEED"))
+            {
+              case2Line = ";" + line + " ; move to synchronous action";
+            }
+            else if (line.Contains("ID=11"))
+            {
+              string feedCmd = $"ID=10 WHEN $AA_IM[DIST] >= {startDistCommand:F3} DO FEED; Feed Starts Here";
+              result.Add(feedCmd);
+            }
+
+            if (line.Contains("F=") && !line.Contains(" set feedrate for course"))
+            {
+              //skip this line
+              case2ExtraneousFR = true;
+            }
+
+            
+
+            if (!case2ExtraneousFR)
+            {
+              result.Add(case2Line);
+            }
+
+
+            if (line.Contains("UV(1)"))
+            {
+              result.RemoveAt(result.Count - 1); //remove the UV line
+              result.Add(";" + case2Line + " ; end of course synchronous actions and move this to synchronous action");
+              result.Add(sStartOfCourse + " ; start of course ");
+              state++;
+            }
+            break;
+
+          case 3:
+            string case3Line = line;
+            if( line.Contains("G9"))
+            {
+              case3Line = line.Replace("G9", "G1");
+            }
+            if(line.Contains("M64"))
+            {
+              case3Line = "; " + line + " move to synchronous action";
+            }
+            if( line.Contains("UV"))
+            {
+              case3Line = ";" + line + " ; move to synchronous action";
+              state++;
+            }
+            result.Add(case3Line);
+            break;
+
+          case 4:
+            if( line.Contains("F="))
+            {
+              result.Add(line);
+              state++;
+            }
+
+            break;
+
+          case 5:
+            if( line.Contains("G1"))
+            {
+              result.Add(line + "; fly out");
+              state++;
+            }
+            break;
+
+          case 6:
+            string case6Line = line;
+            if( line.Contains("G1") || line.Contains("F="))
+            {
+              break;
+            }
+            if( line.Contains("APPROACH"))
+            {
+              sStartOfCourse = "";
+              state = 1;
+            }
+            result.Add(case6Line);
+            break;
+        }
+      }
+      return result;
     }
 
     internal static void decoupleROTX(string fileName, string outputFileName)
