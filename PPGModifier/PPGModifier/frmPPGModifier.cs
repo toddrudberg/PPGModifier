@@ -135,5 +135,71 @@ namespace PPGModifier
       ProgramConversions.decoupleROTX(ofd.FileName, outputFileName);
       this.Enabled = true;
     }
+
+    private void btnMoveCompactionBrake(object sender, EventArgs e)
+    {
+      this.Enabled = false;
+
+      using var dlg = new TuningDialog(_opts);
+      if (dlg.ShowDialog(this) == DialogResult.OK)
+      {
+        _opts = dlg.Options;
+        _opts.Save(ConfigPath);
+      }
+      else
+      {
+        this.Enabled = true;
+        return; // cancelled
+      }
+
+      OpenFileDialog ofd = new OpenFileDialog();
+      ofd.Filter = "GCode files (*.mpf)|*.mpf|All files (*.*)|*.*";
+      ofd.Title = "Select GCode File";
+      if (ofd.ShowDialog() != DialogResult.OK)
+      {
+        MessageBox.Show("No file selected.");
+        this.Enabled = true;
+        return;
+      }
+      // Write the output lines to a new file
+      string directory = Path.GetDirectoryName(ofd.FileName);
+      string filenameWithoutExt = Path.GetFileNameWithoutExtension(ofd.FileName);
+      string outputFileName = Path.Combine(directory, filenameWithoutExt + "_bk.mpf");
+      ProgramConversions.MoveCompactBrake(ofd.FileName, outputFileName, _opts);
+      this.Enabled = true;
+    }
+
+    private void btnMoveCutPrepare_Click(object sender, EventArgs e)
+    {
+      this.Enabled = false;
+
+      using var dlg = new TuningDialog(_opts);
+      if (dlg.ShowDialog(this) == DialogResult.OK)
+      {
+        _opts = dlg.Options;
+        _opts.Save(ConfigPath);
+      }
+      else
+      {
+        this.Enabled = true;
+        return; // cancelled
+      }
+
+      OpenFileDialog ofd = new OpenFileDialog();
+      ofd.Filter = "GCode files (*.mpf)|*.mpf|All files (*.*)|*.*";
+      ofd.Title = "Select GCode File";
+      if (ofd.ShowDialog() != DialogResult.OK)
+      {
+        MessageBox.Show("No file selected.");
+        this.Enabled = true;
+        return;
+      }
+      // Write the output lines to a new file
+      string directory = Path.GetDirectoryName(ofd.FileName);
+      string filenameWithoutExt = Path.GetFileNameWithoutExtension(ofd.FileName);
+      string outputFileName = Path.Combine(directory, filenameWithoutExt + "_bk.mpf");
+      ProgramConversions.MoveCutPrepare(ofd.FileName, outputFileName, _opts);
+      this.Enabled = true;
+    }
   }
 }
