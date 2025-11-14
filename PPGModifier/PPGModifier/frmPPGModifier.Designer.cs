@@ -29,24 +29,62 @@
     private void InitializeComponent()
     {
       btnDoIt = new Button();
+      btnDecoupleROTX = new Button();
+      btnMoveCompaction = new Button();
+      btnMoveCutPrepare = new Button();
       SuspendLayout();
       // 
       // btnDoIt
       // 
-      btnDoIt.Location = new Point(384, 572);
+      btnDoIt.Location = new Point(158, 209);
+      btnDoIt.Margin = new Padding(1);
       btnDoIt.Name = "btnDoIt";
-      btnDoIt.Size = new Size(803, 111);
+      btnDoIt.Size = new Size(331, 41);
       btnDoIt.TabIndex = 0;
       btnDoIt.Text = "Do The Thing";
       btnDoIt.UseVisualStyleBackColor = true;
       btnDoIt.Click += btnDoIt_Click;
       // 
+      // btnDecoupleROTX
+      // 
+      btnDecoupleROTX.Location = new Point(158, 270);
+      btnDecoupleROTX.Name = "btnDecoupleROTX";
+      btnDecoupleROTX.Size = new Size(331, 39);
+      btnDecoupleROTX.TabIndex = 1;
+      btnDecoupleROTX.Text = "Decouple ROTX";
+      btnDecoupleROTX.UseVisualStyleBackColor = true;
+      btnDecoupleROTX.Click += btnDecoupleROTX_Click;
+      // 
+      // btnMoveCompaction
+      // 
+      btnMoveCompaction.Location = new Point(158, 325);
+      btnMoveCompaction.Name = "btnMoveCompaction";
+      btnMoveCompaction.Size = new Size(331, 39);
+      btnMoveCompaction.TabIndex = 2;
+      btnMoveCompaction.Text = "Move Compaction Brake";
+      btnMoveCompaction.UseVisualStyleBackColor = true;
+      btnMoveCompaction.Click += btnMoveCompactionBrake;
+      // 
+      // btnMoveCutPrepare
+      // 
+      btnMoveCutPrepare.Location = new Point(158, 381);
+      btnMoveCutPrepare.Name = "btnMoveCutPrepare";
+      btnMoveCutPrepare.Size = new Size(331, 39);
+      btnMoveCutPrepare.TabIndex = 3;
+      btnMoveCutPrepare.Text = "Move Cut Prepare";
+      btnMoveCutPrepare.UseVisualStyleBackColor = true;
+      btnMoveCutPrepare.Click += btnMoveCutPrepare_Click;
+      // 
       // frmPPGModifier
       // 
-      AutoScaleDimensions = new SizeF(17F, 41F);
+      AutoScaleDimensions = new SizeF(7F, 15F);
       AutoScaleMode = AutoScaleMode.Font;
-      ClientSize = new Size(1712, 1027);
+      ClientSize = new Size(705, 546);
+      Controls.Add(btnMoveCutPrepare);
+      Controls.Add(btnMoveCompaction);
+      Controls.Add(btnDecoupleROTX);
       Controls.Add(btnDoIt);
+      Margin = new Padding(1);
       Name = "frmPPGModifier";
       Text = "Form1";
       Load += frmPPGModifier_Load;
@@ -56,5 +94,8 @@
     #endregion
 
     private Button btnDoIt;
+    private Button btnDecoupleROTX;
+    private Button btnMoveCompaction;
+    private Button btnMoveCutPrepare;
   }
 }
