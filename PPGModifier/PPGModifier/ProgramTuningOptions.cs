@@ -24,6 +24,10 @@ public sealed class ProgramTuningOptions
   [DefaultValue(24000)]
   public double OnCourseFeedRate { get; set; } = 400;
 
+  [Category("Feed Rates"), DisplayName("Short Course Feedrate (mm/s)"), Description("Sort Course FeedRate?")]
+  [DefaultValue(24000)]
+  public double ShortCourseFeedRate { get; set; } = 10;
+
   [Category("Feed Rates"), DisplayName("Transit Feedrate (mm/s)"), Description("How fast do you rapid traverse?")]
   [DefaultValue(30000)]
   public double TransitFeedRate { get; set; } = 1500;

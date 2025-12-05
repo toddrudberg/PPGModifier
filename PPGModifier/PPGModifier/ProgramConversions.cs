@@ -7,6 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ToddUtils.FileParser;
 using ToddUtils.LHT;
 using ToddUtils.SiemensCCIMotionVariables;
 using static System.Net.Mime.MediaTypeNames;
@@ -26,6 +27,7 @@ namespace ToddUtils
       double transitFeedRate = 30000.0;
       bool remove_courseRetract = false;
       bool useOverrideFeedRates = false;
+      bool test = false;
 
       numberFormat = options.NumberFormat;
       minSpacing = options.MinSpacing;
@@ -42,6 +44,8 @@ namespace ToddUtils
       // Helper subFunctions:
       string removeExtraDigits(string line, cMotionArguments args)
       {
+        if (test)
+          test = false;
         string outputline = line;
         fp.ReplaceArgument(outputline, "X=", args.X, out outputline, numberFormat);
         fp.ReplaceArgument(outputline, "Y=", args.Y, out outputline, numberFormat);
@@ -98,7 +102,7 @@ namespace ToddUtils
             }
             else if (line.Contains("F="))
             {
-              if( useOverrideFeedRates)
+              if (useOverrideFeedRates)
               {
                 output.Add($"F={transitFeedRate:F1} ; set feedrate for transition");
               }
@@ -205,26 +209,26 @@ namespace ToddUtils
               if (line.Contains("M72"))
               {
                 nMcodeDropped++;
-                string movedMCode = $"ID={nMcodeDropped + 10} WHEN $AA_IM[DIST] >= {lastDISTCommand:F3} DO M72; Activate Cut Motor";
-                output[nFeedLine] += "\n" + movedMCode;
+                string movedMCode = $"ID={nMcodeDropped + 10} WHEN $AA_IM[DIST] >= {lastDISTCommand:F3} DO M72 ; Activate Cut Motor";
+                //output[nFeedLine] += "\n" + movedMCode;
               }
               else if (line.Contains("M61"))
               {
                 nMcodeDropped++;
-                string movedMCode = $"ID={nMcodeDropped + 10} WHEN $AA_IM[DIST] >= {lastDISTCommand:F3} DO M61; Cut Prepare";
-                output[nFeedLine] += "\n" + movedMCode;
+                string movedMCode = $"ID={nMcodeDropped + 10} WHEN $AA_IM[DIST] >= {lastDISTCommand:F3} DO M61 ; Cut Prepare";
+                //output[nFeedLine] += "\n" + movedMCode;
               }
               else if (line.Contains("M68"))
               {
                 nMcodeDropped++;
-                string movedMCode = $"ID={nMcodeDropped + 10} WHEN $AA_IM[DIST] >= {lastDISTCommand:F3} DO M68; Engage Compaction Brake";
-                output[nFeedLine] += "\n" + movedMCode;
+                string movedMCode = $"ID={nMcodeDropped + 10} WHEN $AA_IM[DIST] >= {lastDISTCommand:F3} DO M68 ; Engage Compaction Brake";
+                //output[nFeedLine] += "\n" + movedMCode;
               }
               else if (line.Contains("M69"))
               {
                 nMcodeDropped++;
-                string movedMCode = $"ID={nMcodeDropped + 10} WHEN $AA_IM[DIST] >= {lastDISTCommand:F3} DO M69; Disengage Compaction Break";
-                output[nFeedLine] += "\n" + movedMCode;
+                string movedMCode = $"ID={nMcodeDropped + 10} WHEN $AA_IM[DIST] >= {lastDISTCommand:F3} DO M69 ; Disengage Compaction Break";
+                //output[nFeedLine] += "\n" + movedMCode;
               }
               else if (line.Contains("M64"))
               {
@@ -232,21 +236,21 @@ namespace ToddUtils
                 if (moveCutToSynchronousAction)
                 {
                   nMcodeDropped++;
-                  string movedMCode = $"ID={nMcodeDropped + 10} WHEN $AA_IM[DIST] >= {lastDISTCommand:F3} DO M64; Cut";
-                  output[nFeedLine] += "\n" + movedMCode;
+                  string movedMCode = $"ID={nMcodeDropped + 10} WHEN $AA_IM[DIST] >= {lastDISTCommand:F3} DO M64 ; Cut";
+                  output[nFeedLine] += "\n;" + movedMCode;
                 }
                 if (lastLine != lastMotionLine)
                 {
                   output.Add(lastLine);
                 }
-                if( !moveCutToSynchronousAction )
+                if (!moveCutToSynchronousAction)
                   output.Add(line);
               }
               else if (line.Contains("M74"))
               {
                 nMcodeDropped++;
-                string movedMCode = $"ID={nMcodeDropped + 10} WHEN $AA_IM[DIST] >= {lastDISTCommand:F3} DO M74; End of Tack";
-                output[nFeedLine] += "\n" + movedMCode;
+                string movedMCode = $"ID={nMcodeDropped + 10} WHEN $AA_IM[DIST] >= {lastDISTCommand:F3} DO M74 ; End of Tack";
+                //output[nFeedLine] += "\n" + movedMCode;
               }
 
               else if (line.Contains("CFORCE"))
@@ -254,7 +258,7 @@ namespace ToddUtils
                 nMcodeDropped++;
                 int n = line.IndexOf("CFORCE");
                 string cforceCommand = line.Substring(n);
-                string movedMCode = $"ID={nMcodeDropped + 10} WHEN $AA_IM[DIST] >= {lastDISTCommand:F3} DO {cforceCommand}; Printing Compaction";
+                string movedMCode = $"ID={nMcodeDropped + 10} WHEN $AA_IM[DIST] >= {lastDISTCommand:F3} DO {cforceCommand} ; Printing Compaction";
                 output[nFeedLine] += "\n" + movedMCode;
               }
               else if (line.Contains("F="))
@@ -288,18 +292,6 @@ namespace ToddUtils
       }
 
 
-      //renumber the program:
-      int nNum = 1;
-      List<string> outputRenumbered = new List<string>();
-
-      List<string> flattened = new List<string>();
-      foreach (var chunk in output)
-      {
-        flattened.AddRange(chunk.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None));
-      }
-
-      output.Clear();
-      output = flattened;
 
       // apply the Ultimate Reality Path
       if (options.Remove_courseRetract)
@@ -309,13 +301,23 @@ namespace ToddUtils
         //List<string> BlendRetract = new List<string>(output);
         //output = DoBlend(BlendRetract);
       }
+      output = Flatten(output);
 
+      output = AddCourseLength(output, options);
+      output = DeleteM64(output,  options);
+      output = MoveCourseFeedRate(output, options);
+      output = Flatten(output);
+
+      //renumber the part program
+      //renumber the program:
+      int nNum = 1;
+      List<string> outputRenumbered = new List<string>();
       for (int i = 0; i < output.Count; i++)
       {
         string line = output[i];
         string trimmed = line.TrimStart();
 
-        if (i == 52)
+        if (i == 59)
         {
           Console.WriteLine(line);
         }
@@ -351,9 +353,6 @@ namespace ToddUtils
         }
       }
 
-      outputRenumbered = AddCourseLength(outputRenumbered);
-      outputRenumbered = MoveCutPrepare(outputRenumbered);
-
       //output the results:
       string text = string.Join(Environment.NewLine, outputRenumbered);
       if (!string.IsNullOrEmpty(outputFileName))
@@ -367,6 +366,80 @@ namespace ToddUtils
         Clipboard.SetText(text);
         Console.WriteLine("Output copied to clipboard.");
       }
+    }
+
+    private static List<string> MoveCourseFeedRate(List<string> output, ProgramTuningOptions options)
+    {
+      List<string> result = new List<string>();
+      int state = 0;
+      string fline = "";
+      for (int ii = 0; ii < output.Count; ii++)
+      {
+        string line = output[ii];
+
+        switch (state)
+        {
+          case 0:
+
+            if (line.Contains("WHEN TRUE DO LAYER_NUM="))
+            {
+              state++;
+            }
+            result.Add(line);
+            break;
+
+          case 1:
+            if (line.Contains("F="))
+            {
+              state++;
+              fline = line;
+            }
+            else 
+            {
+              result.Add(line); 
+            }
+            break;
+
+          case 2:
+            if (line.Contains("FEED"))
+            {
+              result.Add(line);
+              result.Add(fline);
+              state = 0;
+            }
+            else
+            {
+              result.Add(line);
+            }
+            break;
+        }        
+      }
+      return result;
+    }
+
+    private static List<string> DeleteM64(List<string> output, ProgramTuningOptions options)
+    {
+      List<string> result = new List<string>();
+      for (int ii = 0; ii < output.Count; ii++)
+      {
+        string line = output[ii];
+        if (!line.Contains("M64"))
+          result.Add(line);
+      }
+      return result;
+    }
+
+    private static List<string> Flatten(List<string> output)
+    {
+      List<string> flattened = new List<string>();
+      foreach (var chunk in output)
+      {
+        flattened.AddRange(chunk.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None));
+      }
+
+      output.Clear();
+      output = flattened;
+      return output;
     }
 
     private static List<string> DoBlend(List<string> blendRetract)
@@ -623,6 +696,8 @@ namespace ToddUtils
             if (line.Contains("G9") && !options.StopOnCut)
             {
               case3Line = line.Replace("G9", "G1");
+              case3Line += "\nM65";
+
             }
             if(line.Contains("M64"))
             {
@@ -675,13 +750,17 @@ namespace ToddUtils
       return result;
     }
 
-    internal static List<string> AddCourseLength(List<string> input)
+    internal static List<string> AddCourseLength(List<string> input, ProgramTuningOptions options)
     {
       var result = new List<string>();
       int state = 0;
+      bool bFirstPass = true;
 
       int courseHeadIndex = -1;
+      int skipRestartIndex = -1;
+      int fCommandIndex = -1;
       double DistStart = 0.0;
+      double DistEnd = 0.0;
 
       static double TryGetCutDIST(string line)
       {
@@ -694,6 +773,33 @@ namespace ToddUtils
 
       }
 
+      string InsertDistComment(string line, string comment)
+      {
+        const string tag = "DIST=";
+        int idx = line.IndexOf(tag);
+        if (idx < 0)
+          return line; // no DIST= found
+
+        int valueStart = idx + tag.Length;
+
+        // Move through digits and decimal point
+        int valueEnd = valueStart;
+        while (valueEnd < line.Length &&
+               (char.IsDigit(line[valueEnd]) || line[valueEnd] == '.' || line[valueEnd] == '-'))
+        {
+          valueEnd++;
+        }
+
+        // Extract original number
+        string originalValue = line.Substring(valueStart, valueEnd - valueStart);
+
+        // Build new line
+        string before = line.Substring(0, valueEnd);
+        string after = line.Substring(valueEnd);
+
+        return $"{before} ({comment}){after}";
+      }
+
       for (int i = 0; i < input.Count; i++)
       {
         string line = input[i];
@@ -701,6 +807,9 @@ namespace ToddUtils
         switch (state)
         {
           case 0:
+            courseHeadIndex = -1;
+            skipRestartIndex = -1;
+            fCommandIndex = -1;
             if (line.Contains("G1") || line.Contains("G9"))
             {
               if (line.Contains("DIST="))
@@ -719,13 +828,87 @@ namespace ToddUtils
             }
             break;
           case 1:
+            if (line.Contains("SKIP_RESTART:") || bFirstPass)
+            {
+              skipRestartIndex = i;
+              state++;
+            }
+            break;
+
+          case 2:
+            if (line.Contains("F=") || bFirstPass)
+            {
+              fCommandIndex = i;
+              state++;
+            }
+            break;
+
+          case 3:
+
+
+
             if (line.Contains("M64"))
             {
               double CutDIST = TryGetCutDIST(line);
               double courseLength = CutDIST - DistStart;
               if (courseLength < 0)
                 courseLength = 0;
-              result[courseHeadIndex] = result[courseHeadIndex] + $" COURSE_LEN={courseLength:F3}";
+
+              if( courseLength < 100)
+              {
+                cFileParse fp = new cFileParse();
+                string fline = result[fCommandIndex];
+                fp.ReplaceArgument(fline, "F=", options.ShortCourseFeedRate * 60.0, out fline);
+                result[fCommandIndex] = fline;
+              }
+
+              result[courseHeadIndex] = result[courseHeadIndex] + $" DIST_AT_CUT={CutDIST:F3} ;({courseLength:F3})";
+
+              if( !bFirstPass )
+                result[skipRestartIndex] = result[skipRestartIndex] + $" DIST_AT_CUT={CutDIST:F3} ;({courseLength:F3})";
+              bFirstPass = false;
+              state++;
+            }
+            else if (line.Contains("DIST"))
+            {
+              //N3287 ID=11 WHEN $AA_IM[DIST] >= 27868.830 DO M74; End of Tack
+
+              string[] splits = line.Split(' ');
+              double value = double.Parse(splits[4], CultureInfo.InvariantCulture);
+              //splits[5] += $" ({value - DistStart:F3})";
+
+              //string newLine = string.Join(" ", splits);
+              //line = newLine;
+
+              int commentLocation = line.IndexOf(';');
+
+              if (commentLocation < 0)
+                line = line + $" ; ({value - DistStart:F3})";
+              else
+                line = line.Insert(commentLocation + 1, $" ({value - DistStart:F3})");
+
+              line += $" ({value - DistStart:F3})";
+            }
+            break;
+
+          case 4:
+            if (line.Contains("DIST="))
+            {
+              cMotionArguments anArg = cMotionArguments.getMotionArguments(line);   
+              DistEnd = anArg.DIST;
+
+              //line = InsertDistComment(line, $"{anArg.DIST - DistStart:F3}");
+
+              int commentLocation = line.IndexOf(';');
+
+              if (commentLocation < 0)
+                line = line + $" ; ({anArg.DIST - DistStart:F3})";
+              else
+                line = line.Insert(commentLocation + 1, $" ({anArg.DIST - DistStart:F3})");
+            }
+            if ( line.Contains("UV(0)"))
+            {
+              DistStart = DistEnd; //initialize DistStart to the last Dist command in the course. 
               state = 0;
             }
             break;
