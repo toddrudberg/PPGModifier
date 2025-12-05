@@ -304,7 +304,7 @@ namespace ToddUtils
       output = Flatten(output);
 
       output = AddCourseLength(output, options);
-      output = DeleteM64(output,  options);
+      output = DeleteM64SetCompactionForce(output,  options);
       output = MoveCourseFeedRate(output, options);
       output = Flatten(output);
 
@@ -417,13 +417,32 @@ namespace ToddUtils
       return result;
     }
 
-    private static List<string> DeleteM64(List<string> output, ProgramTuningOptions options)
+    private static List<string> DeleteM64SetCompactionForce(List<string> output, ProgramTuningOptions options)
     {
       List<string> result = new List<string>();
+      ToddUtils.FileParser.cFileParse fp = new ToddUtils.FileParser.cFileParse();
       for (int ii = 0; ii < output.Count; ii++)
       {
         string line = output[ii];
-        if (!line.Contains("M64"))
+        if (line.Contains("M64"))
+        {
+
+          //line = line.Replace(";", "");
+          int idx = line.IndexOf(';');
+          if (idx >= 0)
+          {
+            line = line.Remove(idx, 1);
+          }
+          line = line.Replace("M64", "M65");
+          result.Add(line);
+        }
+        else if(line.Contains("WHEN TRUE DO CFORCE="))
+        {
+          fp.ReplaceArgument(line, "CFORCE=", options.TackCompactionForce, out string newforceline);
+          line = newforceline;
+          result.Add(line);
+        }
+        else
           result.Add(line);
       }
       return result;
@@ -696,7 +715,7 @@ namespace ToddUtils
             if (line.Contains("G9") && !options.StopOnCut)
             {
               case3Line = line.Replace("G9", "G1");
-              case3Line += "\nM65";
+              //case3Line += "\nM65";
 
             }
             if(line.Contains("M64"))

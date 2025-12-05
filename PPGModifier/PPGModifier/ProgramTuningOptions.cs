@@ -32,6 +32,11 @@ public sealed class ProgramTuningOptions
   [DefaultValue(30000)]
   public double TransitFeedRate { get; set; } = 1500;
 
+
+  [Category("Process Items"), DisplayName("Tack Compaction Force (N)"), Description("Just do something!")]
+  [DefaultValue(4.0)]
+  public double TackCompactionForce { get; set; } = 4.0;
+
   [Category("Logic"), DisplayName("Remove courseRetract")]
   [DefaultValue(false)]
   public bool Remove_courseRetract { get; set; } = false;
