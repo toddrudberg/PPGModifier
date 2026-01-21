@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
 using System.Resources;
@@ -17,6 +18,87 @@ namespace ToddUtils
 {
   public class ProgramConversions
   {
+    internal static void updateProgram(string filename, string outputFilename, ProgramTuningOptions options)
+    {
+      string numberFormat = "F6";
+
+      double minSpacing = 10.0; // Minimum distance to trigger a print of the line
+      double minAngleChange = 10.0; // Minimum angle change to trigger a print of the line
+      double onCourseFeedRate = 24000.0;
+      double transitFeedRate = 30000.0;
+      bool remove_courseRetract = false;
+      bool useOverrideFeedRates = false;
+
+      numberFormat = options.NumberFormat;
+      minSpacing = options.MinSpacing;
+      minAngleChange = options.MinAngleChange;
+      onCourseFeedRate = options.OnCourseFeedRate * 60;
+      transitFeedRate = options.TransitFeedRate * 60;
+      remove_courseRetract = options.Remove_courseRetract;
+      useOverrideFeedRates = options.UseOverrideFeedRates;
+
+      long count = 0;
+      ToddUtils.FileParser.cFileParse fp = new ToddUtils.FileParser.cFileParse();
+      List<string> output = new List<string>();
+
+
+
+      List<string> ApplyFeedrate(List<string> output, ProgramTuningOptions options)
+      {
+        FileParser.cFileParse fp = new cFileParse();
+        List<string> result = new List<string>();
+
+        int n = 0;
+        foreach (string line in output)
+        {
+          string thisline = line;
+          switch (n)
+          {
+            case 0: //offpart
+              if (line.Contains("F="))
+              {
+                fp.ReplaceArgument(line, "F=", options.OnCourseFeedRate * 60, out string newline);
+                thisline = newline;
+              }
+              if (line.Contains("WHEN TRUE DO LAYER="))
+                n++;
+              break;
+            case 1: //onpart
+              if (line.Contains("F="))
+              {
+                fp.ReplaceArgument(line, "F=", options.OnCourseFeedRate * 60, out string newline);
+                thisline = newline;
+              }
+
+              if (line.Contains("WHEN TRUE DO LAYER="))
+              {
+                n = 0;
+              }
+
+              break;
+          }
+          result.Add(thisline);
+        }
+
+        return result;
+      }
+
+      output = ApplyFeedrate(output, options);
+
+      //output the results:
+      string text = string.Join(Environment.NewLine, output);
+      if (!string.IsNullOrEmpty(outputFilename))
+      {
+
+        File.WriteAllText(outputFilename, text);
+        Console.WriteLine($"Output written to {outputFilename}");
+      }
+      else
+      {
+        Clipboard.SetText(text);
+        Console.WriteLine("Output copied to clipboard.");
+      }
+    }
     internal static void adjustBlockSpacing(string fileName, string outputFileName, ProgramTuningOptions options)
     {
       string numberFormat = "F6";
@@ -135,13 +217,13 @@ namespace ToddUtils
           }
           else if (line.Contains("G602"))
           {
-            output.Add("G64");
-            output.Add("CPRECON");
+            //output.Add("G64");
+            //output.Add("CPRECON");
             //output.Add("COMPCAD");
             //output.Add("COMPCURV");
             //output.Add("G603");
             //output.Add("G642 ADIS=10.0 CTOL=2.0");
-            output.Add("G641 ADIS=10.0");
+            //output.Add("G641 ADIS=10.0");
             //output.Add("G645");
           }
           else if (line.Contains("SET_PATH_ACCEL"))
@@ -294,7 +376,7 @@ namespace ToddUtils
 
 
       // apply the Ultimate Reality Path
-      if (options.Remove_courseRetract)
+      //if (options.Remove_courseRetract)
       {
         List<string> URP = new List<string>(output);
         output = DoURP(URP, options);
@@ -306,6 +388,9 @@ namespace ToddUtils
       output = AddCourseLength(output, options);
       output = DeleteM64SetCompactionForce(output,  options);
       output = MoveCourseFeedRate(output, options);
+      output = NukeSetPathAccel(output, options);
+      output = ChangeToLayerPath(output, options);
+      output = ApplyFeedrate(output, options);
       output = Flatten(output);
 
       //renumber the part program
@@ -368,6 +453,90 @@ namespace ToddUtils
       }
     }
 
+    private static List<string> ChangeToLayerPath(List<string> output, ProgramTuningOptions options)
+    {
+      FileParser.cFileParse fp = new cFileParse();
+      List<string> result = new List<string>();
+      foreach (string line in output)
+      {
+        if( line.Contains("GOTO COURSE_NUMBER"))
+        {
+          result.Add("GOTO ENTRY_POINT");
+        }
+        else if(line.Contains("WHEN TRUE DO LAYER_NUM="))
+        {
+          string[] dammit = line.Split(' ');
+          fp.GetArgument(line, "LAYER_NUM=", out double layer);
+          fp.GetArgument(line, "COURSE_NUM=", out double course);
+          if(line.Contains("SKIP_RESTART"))
+          {
+            string res = $"SKIP_RESTART: WHEN TRUE DO LAYER={(int)layer} PATH={(int)course}";
+            result.Add(res);
+          }
+          else if (dammit[1].Contains("COURSE"))
+          {
+            //LAYER1_PATH2: WHEN TRUE DO LAYER=1 PATH=2
+            string res = $"LAYER{(int)layer}_PATH{(int)course}: WHEN TRUE DO LAYER={(int)layer} PATH={(int)course}";
+            result.Add(res);
+          }
+          else
+          {
+            string res = $"WHEN TRUE DO LAYER={(int)layer} PATH={(int)course}";
+            result.Add(res);
+          }
+        }
+        else
+        {
+          result.Add(line);
+        }
+      }
+      return result;
+    }
+
+    private static List<string> ApplyFeedrate(List<string> output, ProgramTuningOptions options)
+    {
+      FileParser.cFileParse fp = new cFileParse();
+      List<string> result = new List<string>();
+
+      int n = 0;
+      foreach (string line in output)
+      {
+        string thisline = line;
+        switch (n)
+        {
+          case 0:
+            if (line.Contains("BRISK"))
+              n++;
+            break;
+          case 1:
+            if (line.Contains("F="))
+            {
+              fp.ReplaceArgument(line, "F=", options.OnCourseFeedRate * 60, out string newline);
+              thisline = newline;
+              n = 0;
+            }
+
+            break;
+        }
+        result.Add (thisline);
+      }
+
+      return result;
+    }
+
+    private static List<string> NukeSetPathAccel(List<string> output, ProgramTuningOptions options)
+    {
+      List<string> result = new List<string>();
+      foreach (string s in output)
+      {
+        if (!s.Contains("SET_PATH_ACCEL"))
+        {
+          result.Add(s);
+        }
+      }
+      return result;
+    }
+
     private static List<string> MoveCourseFeedRate(List<string> output, ProgramTuningOptions options)
     {
       List<string> result = new List<string>();
@@ -404,6 +573,7 @@ namespace ToddUtils
             if (line.Contains("FEED"))
             {
               result.Add(line);
+              result.Add("BRISK");
               result.Add(fline);
               state = 0;
             }
@@ -434,7 +604,7 @@ namespace ToddUtils
             line = line.Remove(idx, 1);
           }
           line = line.Replace("M64", "M65");
-          result.Add(line);
+          //result.Add(line);
         }
         else if(line.Contains("WHEN TRUE DO CFORCE="))
         {
@@ -753,7 +923,7 @@ namespace ToddUtils
 
           case 6:
             string case6Line = line;
-            if( line.Contains("G1") || line.Contains("F="))
+            if( (line.Contains("G1") || line.Contains("F="))&&!options.Remove_courseRetract)
             {
               break;
             }
@@ -864,8 +1034,6 @@ namespace ToddUtils
 
           case 3:
 
-
-
             if (line.Contains("M64"))
             {
               double CutDIST = TryGetCutDIST(line);
@@ -881,14 +1049,18 @@ namespace ToddUtils
                 result[fCommandIndex] = fline;
               }
 
-              result[courseHeadIndex] = result[courseHeadIndex] + $" DIST_AT_CUT={CutDIST:F3} ;({courseLength:F3})";
+              //result[courseHeadIndex] = result[courseHeadIndex] + $" DIST_AT_CUT={CutDIST:F3} ;({courseLength:F3})";
+              //result[fCommandIndex] = result[fCommandIndex] + $" DIST_AT_CUT={CutDIST:F3} ;({courseLength:F3})";
+              
+              //removed temporailly to work with V1.11
+              result.Add($"DIST_AT_CUT={CutDIST:F3} ;({courseLength:F3})");
 
-              if( !bFirstPass )
-                result[skipRestartIndex] = result[skipRestartIndex] + $" DIST_AT_CUT={CutDIST:F3} ;({courseLength:F3})";
+              //if ( !bFirstPass )
+              //  result[skipRestartIndex] = result[skipRestartIndex] + $" DIST_AT_CUT={CutDIST:F3} ;({courseLength:F3})";
               bFirstPass = false;
               state++;
             }
-            else if (line.Contains("DIST"))
+            else if (line.Contains("DIST") && line.Contains("ID"))
             {
               //N3287 ID=11 WHEN $AA_IM[DIST] >= 27868.830 DO M74; End of Tack
 
