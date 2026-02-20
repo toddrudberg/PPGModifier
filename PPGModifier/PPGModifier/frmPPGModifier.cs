@@ -206,32 +206,70 @@ namespace PPGModifier
     {
       this.Enabled = false;
 
+      string configToUse = ConfigPath;
+
+      var result = MessageBox.Show(
+          "Open last tuning file?\n\nYes = Open last\nNo = Choose file\nCancel = Abort",
+          "Open Tuning Options",
+          MessageBoxButtons.YesNoCancel,
+          MessageBoxIcon.Question);
+
+      if (result == DialogResult.Cancel)
+      {
+        this.Enabled = true;
+        return;
+      }
+
+      if (result == DialogResult.No)
+      {
+        using var ofdConfig = new OpenFileDialog();
+        ofdConfig.Filter = "JSON Files (*.json)|*.json|All Files (*.*)|*.*";
+        ofdConfig.Title = "Select Tuning Options File";
+
+        if (ofdConfig.ShowDialog(this) != DialogResult.OK)
+        {
+          this.Enabled = true;
+          return;
+        }
+
+        configToUse = ofdConfig.FileName;
+      }
+
+      // Load selected config
+      _opts = ProgramTuningOptions.Load(configToUse);
+
       using var dlg = new TuningDialog(_opts);
       if (dlg.ShowDialog(this) == DialogResult.OK)
       {
         _opts = dlg.Options;
-        _opts.Save(ConfigPath);
+        ProgramTuningOptions.SaveAs(ConfigPath, _opts);
       }
       else
       {
         this.Enabled = true;
-        return; // cancelled
+        return;
       }
 
-      OpenFileDialog ofd = new OpenFileDialog();
+      using var ofd = new OpenFileDialog();
       ofd.Filter = "GCode files (*.mpf)|*.mpf|All files (*.*)|*.*";
       ofd.Title = "Select GCode File";
-      if (ofd.ShowDialog() != DialogResult.OK)
+
+      if (ofd.ShowDialog(this) != DialogResult.OK)
       {
         MessageBox.Show("No file selected.");
         this.Enabled = true;
         return;
       }
-      // Write the output lines to a new file
+
       string directory = Path.GetDirectoryName(ofd.FileName);
       string filenameWithoutExt = Path.GetFileNameWithoutExtension(ofd.FileName);
       string outputFileName = Path.Combine(directory, filenameWithoutExt + "_bs.mpf");
+
       ProgramConversions.updateProgram(ofd.FileName, outputFileName, _opts);
+      string outputFileTunringUsedName = outputFileName.Replace("_bs.mpf", "_opts.json");
+      ProgramTuningOptions.SaveAs(outputFileTunringUsedName, _opts);
+
+
       this.Enabled = true;
     }
   }

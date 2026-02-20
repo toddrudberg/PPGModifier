@@ -423,6 +423,42 @@ namespace ToddUtils
         }
         return outputRenumbered;
       }
+
+      List<string> CollectStats(List<string> output)
+      {
+        List<string> result = new List<string>();
+        ToddUtils.FileParser.cFileParse fp = new cFileParse();
+
+        int activeLayer = 0;
+        int activePath = 0;
+        int totalPaths = 0;
+
+        foreach (string line in output)
+        {
+          {
+            if (line.Contains("LAYER="))
+            {
+              fp.GetArgument(line, "LAYER=", out double _layerNum, false);
+
+              if (activeLayer != (int)_layerNum)
+              {
+
+                if ((int)_layerNum > 1)
+                {
+                  result.Add($"Layer: {activeLayer} has {activePath} Paths");
+                  totalPaths += activePath;
+                }
+              }
+              activeLayer = (int)_layerNum;
+              fp.GetArgument(line, "PATH=", out double _path, false);
+              activePath = (int)_path;
+            }
+          }
+        }
+        result.Add($"Layer: {activeLayer} has {activePath} Paths");
+        result.Add($"There are {activeLayer} Layers and {totalPaths} Paths");
+        return result;
+      }
       #endregion
 
       output = ApplyFeedrate(output, options);
@@ -431,20 +467,32 @@ namespace ToddUtils
       output = ApplyInterpolationMode(output, options);
       output = InsertCycle832(output, options);
       output = SetOffPartTime(output, options);
-      //output = RenumberPartProgram(output);
+      output = RenumberPartProgram(output);
+      List<string> summary = CollectStats(output);
 
       //output the results:
       string text = string.Join(Environment.NewLine, output);
+      string _summary = string.Join(Environment.NewLine, summary);
       if (!string.IsNullOrEmpty(outputFilename))
       {
 
         File.WriteAllText(outputFilename, text);
         Console.WriteLine($"Output written to {outputFilename}");
+        string statsFileName = outputFilename.Replace("_bs.mpf", "_stats.txt");
+        File.WriteAllText(statsFileName, _summary);
+
+        
       }
       else
       {
         Clipboard.SetText(text);
         Console.WriteLine("Output copied to clipboard.");
+      }
+
+      Console.WriteLine("File Summary");
+      foreach (string line in summary)
+      {
+        Console.WriteLine(line);
       }
     }
     internal static void adjustBlockSpacing(string fileName, string outputFileName, ProgramTuningOptions options)

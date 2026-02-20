@@ -80,4 +80,10 @@ public sealed class ProgramTuningOptions
     var json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
     File.WriteAllText(path, json);
   }
+
+  public static void SaveAs(string path, ProgramTuningOptions opts)
+  {
+    var json = JsonSerializer.Serialize(opts, new JsonSerializerOptions { WriteIndented = true });
+    File.WriteAllText(path, json);
+  }
 }
