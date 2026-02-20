@@ -16,25 +16,35 @@ public sealed class ProgramTuningOptions
   [DefaultValue(10.0)]
   public double MinAngleChange { get; set; } = 10.0;
 
-  [Category("Feed Rates"), DisplayName("Use Override Feed Rates")]
+  [Category("Logic"), DisplayName("Use Override Feed Rates")]
   [DefaultValue(true)]
   public bool UseOverrideFeedRates { get; set; } = false;
 
-  [Category("Feed Rates"), DisplayName("On Course Feedrate (mm/s)"), Description("How fast do you want to print?")]
-  [DefaultValue(24000)]
+  [Category("Feed Rates"), DisplayName("On Course FR (mm/s)"), Description("How fast do you want to print?")]
+  [DefaultValue(500)]
   public double OnCourseFeedRate { get; set; } = 400;
 
-  [Category("Feed Rates"), DisplayName("Short Course Feedrate (mm/s)"), Description("Sort Course FeedRate?")]
-  [DefaultValue(24000)]
-  public double ShortCourseFeedRate { get; set; } = 10;
+  [Category("Feed Rates"), DisplayName("On Course FR First Layer (mm/s)"), Description("Sort Course FeedRate?")]
+  [DefaultValue(200)]
+  public double OnCourseFeedRateFirstLayer { get; set; } = 10;
 
   [Category("Feed Rates"), DisplayName("Transit Feedrate (mm/s)"), Description("How fast do you rapid traverse?")]
-  [DefaultValue(30000)]
+  [DefaultValue(1500)]
   public double TransitFeedRate { get; set; } = 1500;
 
   [Category("Process Items"), DisplayName("Tack Compaction Force (N)"), Description("Just do something!")]
   [DefaultValue(4.0)]
   public double TackCompactionForce { get; set; } = 4.0;
+
+  [Category("Process Items"), DisplayName("Course Compaction Force (N)"), Description("Just do something!")]
+  [DefaultValue(2.5)]
+
+  public double CourseCompactionForce { get; set; } = 2.5;
+
+  [Category("Process Items"), DisplayName("Nozzle Temp (deg C)"), Description("Just do something!")]
+  [DefaultValue(70)]
+
+  public double nozzleTemp { get; set; } = 70.0;
 
   [Category("Logic"), DisplayName("Remove courseRetract")]
   [DefaultValue(false)]
@@ -44,6 +54,13 @@ public sealed class ProgramTuningOptions
   [DefaultValue(true)]
   public bool StopOnCut { get; set; } = false;
 
+  [Category("Logic"), DisplayName("Apply Process Item Overrides")]
+  [DefaultValue(true)]
+  public bool UseProcessItems { get; set; } = true;
+
+  [Category("Logic"), DisplayName("Insert Cycle832 (rotator friendly)")]
+  [DefaultValue(true)]
+  public bool UseCycle832 { get; set; } = true;
 
 
   // JSON persistence

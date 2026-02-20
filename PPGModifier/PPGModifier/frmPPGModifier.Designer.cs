@@ -32,7 +32,7 @@
       btnDecoupleROTX = new Button();
       btnMoveCompaction = new Button();
       btnMoveCutPrepare = new Button();
-      button1 = new Button();
+      btnDoTheThingv1_12 = new Button();
       SuspendLayout();
       // 
       // btnDoIt
@@ -76,23 +76,23 @@
       btnMoveCutPrepare.UseVisualStyleBackColor = true;
       btnMoveCutPrepare.Click += btnMoveCutPrepare_Click;
       // 
-      // button1
+      // btnDoTheThingv1_12
       // 
-      button1.Location = new Point(158, 156);
-      button1.Margin = new Padding(1);
-      button1.Name = "button1";
-      button1.Size = new Size(331, 41);
-      button1.TabIndex = 4;
-      button1.Text = "Do The Thing 1.12";
-      button1.UseVisualStyleBackColor = true;
-      button1.Click += button1_Click;
+      btnDoTheThingv1_12.Location = new Point(158, 156);
+      btnDoTheThingv1_12.Margin = new Padding(1);
+      btnDoTheThingv1_12.Name = "btnDoTheThingv1_12";
+      btnDoTheThingv1_12.Size = new Size(331, 41);
+      btnDoTheThingv1_12.TabIndex = 4;
+      btnDoTheThingv1_12.Text = "Do The Thing 1.12";
+      btnDoTheThingv1_12.UseVisualStyleBackColor = true;
+      btnDoTheThingv1_12.Click += this.btnDoTheThingv1_12_Click;
       // 
       // frmPPGModifier
       // 
       AutoScaleDimensions = new SizeF(7F, 15F);
       AutoScaleMode = AutoScaleMode.Font;
       ClientSize = new Size(705, 546);
-      Controls.Add(button1);
+      Controls.Add(btnDoTheThingv1_12);
       Controls.Add(btnMoveCutPrepare);
       Controls.Add(btnMoveCompaction);
       Controls.Add(btnDecoupleROTX);
@@ -110,6 +110,6 @@
     private Button btnDecoupleROTX;
     private Button btnMoveCompaction;
     private Button btnMoveCutPrepare;
-    private Button button1;
+    private Button btnDoTheThingv1_12;
   }
 }

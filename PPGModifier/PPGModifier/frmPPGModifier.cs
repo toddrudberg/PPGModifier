@@ -202,7 +202,7 @@ namespace PPGModifier
       this.Enabled = true;
     }
 
-    private void button1_Click(object sender, EventArgs e)
+    private void btnDoTheThingv1_12_Click(object sender, EventArgs e)
     {
       this.Enabled = false;
 
@@ -231,7 +231,7 @@ namespace PPGModifier
       string directory = Path.GetDirectoryName(ofd.FileName);
       string filenameWithoutExt = Path.GetFileNameWithoutExtension(ofd.FileName);
       string outputFileName = Path.Combine(directory, filenameWithoutExt + "_bs.mpf");
-      ProgramConversions.adjustBlockSpacing(ofd.FileName, outputFileName, _opts);
+      ProgramConversions.updateProgram(ofd.FileName, outputFileName, _opts);
       this.Enabled = true;
     }
   }

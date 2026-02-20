@@ -40,25 +40,32 @@ namespace ToddUtils
       long count = 0;
       ToddUtils.FileParser.cFileParse fp = new ToddUtils.FileParser.cFileParse();
       List<string> output = new List<string>();
+      foreach(string s in File.ReadAllLines(filename))
+      {
+        output.Add(s);
+      }
 
-
-
+      #region helper functions
       List<string> ApplyFeedrate(List<string> output, ProgramTuningOptions options)
       {
         FileParser.cFileParse fp = new cFileParse();
         List<string> result = new List<string>();
-
+        bool firstLayer = true;
         int n = 0;
         foreach (string line in output)
         {
           string thisline = line;
+          if(firstLayer && thisline.Contains("LAYER2"))
+          {
+            firstLayer = false;
+          }
           switch (n)
           {
             case 0: //offpart
               if (line.Contains("F="))
               {
-                fp.ReplaceArgument(line, "F=", options.OnCourseFeedRate * 60, out string newline);
-                thisline = newline;
+                fp.ReplaceArgument(line, "F=", options.TransitFeedRate * 60, out string newline);
+                thisline = $"{newline} ; ({options.TransitFeedRate} mm/s)";
               }
               if (line.Contains("WHEN TRUE DO LAYER="))
                 n++;
@@ -66,8 +73,14 @@ namespace ToddUtils
             case 1: //onpart
               if (line.Contains("F="))
               {
-                fp.ReplaceArgument(line, "F=", options.OnCourseFeedRate * 60, out string newline);
-                thisline = newline;
+                double onCourseFeedRate = options.OnCourseFeedRate;
+                if (firstLayer)
+                {
+                  onCourseFeedRate = options.OnCourseFeedRateFirstLayer;
+                }
+
+                fp.ReplaceArgument(line, "F=", onCourseFeedRate * 60, out string newline);
+                thisline = $"{newline} ; ({onCourseFeedRate} mm/s)";
               }
 
               if (line.Contains("WHEN TRUE DO LAYER="))
@@ -83,7 +96,342 @@ namespace ToddUtils
         return result;
       }
 
+      List<string> ApplyProcessItems(List<string> output, ProgramTuningOptions options)
+      {
+        FileParser.cFileParse fp = new cFileParse();
+        List<string> result = new List<string>();
+
+        if (!options.UseProcessItems)
+        {
+          return output;
+        }
+
+
+        foreach (string line in output)
+        {
+          string thisline = line;
+
+          if (line.Contains("WHEN TRUE DO CFORCE="))
+          {
+            fp.ReplaceArgument(line, "CFORCE=", options.CourseCompactionForce, out string newforceline);
+            thisline = newforceline;
+          }
+          if (line.Contains("WHEN TRUE DO TCFORCE="))
+          {
+            fp.ReplaceArgument(line, "TCFORCE=", options.TackCompactionForce, out string newforceline);
+            thisline = newforceline;
+          }
+          if (line.Contains("NOZZLE_TEMP_SET"))
+          {
+            fp.GetArgument(thisline, "N", out double Nnum, false);
+            thisline = $"N{(int)Nnum} NOZZLE_TEMP_SET({options.nozzleTemp:F3})";
+          }
+
+          result.Add(thisline);
+        }
+
+        return result;
+      }
+
+      List<string> ApplyBlockSpacingRules(List<string> output, ProgramTuningOptions options)
+      {
+        FileParser.cFileParse fp = new cFileParse();
+        List<string> result = new List<string>();
+
+        int state = 0;
+        bool first = true;
+        cMotionArguments lastMotionArgs = new cMotionArguments();
+        for (int ii = 0; ii < output.Count; ii++)
+        {
+          string line = output[ii];
+          cMotionArguments motionArguments = new cMotionArguments();
+          if ( line.Contains("G1") || line.Contains("G9"))
+          {
+            motionArguments = cMotionArguments.getMotionArguments(line);
+            if(first)
+            {
+              lastMotionArgs = motionArguments;
+            }
+            first = false;
+          }
+
+          switch (state)
+          {
+            case 0: //not on part
+              if( line.Contains("FEED"))
+              {
+                state++;
+              }
+              result.Add(line);
+              break;
+
+            case 1: //paying out tow on part
+              {
+
+                if ((line.Contains("G1") || line.Contains("G9")) && line.Contains("DIST="))
+                {
+                  double dx = motionArguments.X - lastMotionArgs.X;
+                  double dy = motionArguments.Y - lastMotionArgs.Y;
+                  double dz = motionArguments.Z - lastMotionArgs.Z;
+                  double du = motionArguments.ROTX - lastMotionArgs.ROTX;
+                  double dist = Math.Sqrt(dx * dx + dy * dy + dz * dz);
+
+                  if ((line.Contains("G9") && options.StopOnCut) || (dist >= options.MinSpacing || du >= options.MinAngleChange))
+                  {
+                    result.Add(line);
+                    if( line.Contains("G9") && options.StopOnCut)
+                    {
+                      //result.Add("M61"); removed for testing
+                      result.Add("SOFT");
+                    }
+                    lastMotionArgs = motionArguments;
+                  }
+                }
+                else
+                {
+                  result.Add(line);
+                }
+
+                if ((line.Contains("G1") || line.Contains("G9")) && !line.Contains("DIST="))
+                {
+                  state = 0;
+                }
+                break;
+              }
+          }
+        }
+
+        return result;
+      }
+
+      List<string> ApplyInterpolationMode(List<string> output, ProgramTuningOptions options)
+      {
+        FileParser.cFileParse fp = new cFileParse();
+        List<string> result = new List<string>();
+
+        int n = 0;
+        foreach (string line in output)
+        {
+          string thisline = line;
+          
+          if( thisline.Contains("G603"))
+          {
+            result.Add("SOFT");
+          }
+          else if (thisline.Contains("FEED")) //BRISK is moved to CCI_INIT
+          {
+            result.Add(thisline);
+            result.Add("BRISK");
+          }
+          //else if (thisline.Contains("G9"))
+          //{
+
+          //}
+          else
+          {
+            result.Add($"{thisline}");
+          }
+
+        }
+
+        return result;
+      }
+
+      List<string> SetOffPartTime(List<string> output, ProgramTuningOptions options)
+      {
+        List<string> result = output;
+
+        if (!options.UseOverrideFeedRates)
+        {
+          return result;
+        }
+
+        ToddUtils.FileParser.cFileParse fp = new ToddUtils.FileParser.cFileParse();
+        int fCodeLineNumber = -1;
+        int state = 0;
+        cMotionArguments endOfCourseArguments = new cMotionArguments();
+        cMotionArguments startOfNextCourseArguments = new cMotionArguments();
+        for (int ii = 0; ii < output.Count; ii++)
+        {
+          string line = output[ii];
+          switch (state)
+          {
+            case 0:
+              {
+                if (line.Contains("FEED")) //looking for start of course
+                {
+                  state++;
+                }
+                break;
+              }
+            case 1:
+              {
+                if( ((line.Contains("G1") || line.Contains("G9")) && !line.Contains("DIST")) ) //looking for end of course
+                {
+                  //record the end of the course now
+                  endOfCourseArguments = cMotionArguments.getMotionArguments(line);
+                  state++;
+                }
+                break;
+              }
+            case 2:
+              {
+                if( line.Contains("F=")) //look for the offpart feedrate
+                {
+                  fCodeLineNumber = ii; //record it's line number
+                  state++;
+                }
+                break;
+              }
+            case 3:
+              {
+                if(line.Contains("G1") || line.Contains("G9"))
+                {
+                  startOfNextCourseArguments = cMotionArguments.getMotionArguments(line);
+                }
+                if(line.Contains("FEED")) //look for start of next course
+                {
+                  
+                  //calculate offpart distance
+                  double dx = startOfNextCourseArguments.X - endOfCourseArguments.X;
+                  double dy = startOfNextCourseArguments.Y - endOfCourseArguments.Y;
+                  double dz = startOfNextCourseArguments.Z - endOfCourseArguments.Z;
+                  double offPartDist = Math.Sqrt(dx * dx + dy * dy + dz * dz);
+                  //scale offpart speed
+                  double offPartSpeedMax = offPartDist / 0.2; //mm/s.  Denominator is time in seconds
+
+                  //overwrite offpart speed if necessary
+                  if( options.TransitFeedRate > offPartSpeedMax)
+                  {
+                    //fp.ReplaceArgument(line, "F=", offPartSpeedMax * 60, out string newline);
+                    string newline = $"F={offPartSpeedMax * 60:F0} ; ({offPartSpeedMax:F0} mm/s) ";
+                    result[fCodeLineNumber] = newline;
+                  }
+                  state = 1; //you've satisfied state 0, jump into state 1;
+                }
+                break;
+              }
+          }
+        }
+        return result;
+      }
+
+      List<string> InsertCycle832(List<string> output, ProgramTuningOptions options)
+      {
+        FileParser.cFileParse fp = new cFileParse();
+        List<string> result = new List<string>();
+
+        if(!options.UseCycle832)
+        {
+          return output;
+        }
+
+        int state = 0;
+        double distAtFeeed = 0;
+        cMotionArguments motionArguments = new cMotionArguments();
+        for (int ii = 0; ii < output.Count; ii++)
+        {
+          string line = output[ii];
+          
+          if (line.Contains("G1") || line.Contains("G9"))
+          {
+            motionArguments = cMotionArguments.getMotionArguments(line);
+
+          }
+
+          switch (state)
+          {
+            case 0: //not on part
+              result.Add(line);
+              if (line.Contains("FEED"))
+              {
+                distAtFeeed = motionArguments.DIST;
+                result.Add("CYCLE832(0,_OFF,1)");
+                state++;
+              }
+               
+              break;
+
+            case 1: //paying out tow on part
+              {
+                result.Add(line);
+                if ( (motionArguments.DIST - distAtFeeed) > 20)
+                {
+                  result.Add("CYCLE832(5,_ROUGH,1)");
+                  state++;
+                }
+                break;
+              }
+            case 2:
+              {
+                if (line.Contains("M63"))
+                {
+                  state = 0;
+                }
+                result.Add(line);
+                break;
+              }
+          }
+        }
+
+        return result;
+      }
+
+      List<string> RenumberPartProgram(List<string> output)
+      {
+        int nNum = 1;
+        List<string> outputRenumbered = new List<string>();
+        for (int i = 0; i < output.Count; i++)
+        {
+          string line = output[i];
+          string trimmed = line.TrimStart();
+
+          if (i == 59)
+          {
+            Console.WriteLine(line);
+          }
+
+          if (trimmed.StartsWith("N"))
+          {
+            //Console.WriteLine(line);
+            // split into "Nxxx" and the rest
+            int spaceIndex = trimmed.IndexOf(' ');
+            if (spaceIndex > 0)
+            {
+              string rest = trimmed.Substring(spaceIndex + 1);
+              outputRenumbered.Add($"N{nNum} {rest}");
+            }
+            else
+            {
+              outputRenumbered.Add($"N{nNum}");
+            }
+            nNum++;
+          }
+          else
+          {
+            // skip numbering truly blank lines
+            if (string.IsNullOrWhiteSpace(line))
+            {
+              outputRenumbered.Add(line);
+            }
+            else
+            {
+              outputRenumbered.Add($"N{nNum} {line}");
+              nNum++;
+            }
+          }
+        }
+        return outputRenumbered;
+      }
+      #endregion
+
       output = ApplyFeedrate(output, options);
+      output = ApplyProcessItems(output, options);
+      output = ApplyBlockSpacingRules(output, options);
+      output = ApplyInterpolationMode(output, options);
+      output = InsertCycle832(output, options);
+      output = SetOffPartTime(output, options);
+      //output = RenumberPartProgram(output);
 
       //output the results:
       string text = string.Join(Environment.NewLine, output);
@@ -618,6 +966,8 @@ namespace ToddUtils
       return result;
     }
 
+
+
     private static List<string> Flatten(List<string> output)
     {
       List<string> flattened = new List<string>();
@@ -1045,7 +1395,7 @@ namespace ToddUtils
               {
                 cFileParse fp = new cFileParse();
                 string fline = result[fCommandIndex];
-                fp.ReplaceArgument(fline, "F=", options.ShortCourseFeedRate * 60.0, out fline);
+                fp.ReplaceArgument(fline, "F=", options.OnCourseFeedRateFirstLayer * 60.0, out fline);
                 result[fCommandIndex] = fline;
               }
 
