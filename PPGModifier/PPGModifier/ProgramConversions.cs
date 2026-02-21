@@ -182,6 +182,10 @@ namespace ToddUtils
                     if( line.Contains("G9") && options.StopOnCut)
                     {
                       //result.Add("M61"); removed for testing
+                      if (options.UseCycle832)
+                      {
+                        result.Add("CYCLE832(5,_ROUGH,1)");
+                      }
                       result.Add("SOFT");
                     }
                     lastMotionArgs = motionArguments;
@@ -216,11 +220,19 @@ namespace ToddUtils
           
           if( thisline.Contains("G603"))
           {
+            if (options.UseCycle832)
+            {
+              result.Add("CYCLE832(5,_ROUGH,1)");
+            }
             result.Add("SOFT");
           }
           else if (thisline.Contains("FEED")) //BRISK is moved to CCI_INIT
           {
             result.Add(thisline);
+            if (options.UseCycle832)
+            {
+              result.Add("CYCLE832(0,_OFF,1)");
+            }
             result.Add("BRISK");
           }
           //else if (thisline.Contains("G9"))
@@ -465,7 +477,7 @@ namespace ToddUtils
       output = ApplyProcessItems(output, options);
       output = ApplyBlockSpacingRules(output, options);
       output = ApplyInterpolationMode(output, options);
-      output = InsertCycle832(output, options);
+      //output = InsertCycle832(output, options);
       output = SetOffPartTime(output, options);
       output = RenumberPartProgram(output);
       List<string> summary = CollectStats(output);
