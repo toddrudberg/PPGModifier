@@ -468,7 +468,7 @@ namespace ToddUtils
           }
         }
         result.Add($"Layer: {activeLayer} has {activePath} Paths");
-        result.Add($"There are {activeLayer} Layers and {totalPaths} Paths");
+        result.Add($"There are {activeLayer} Layers and {totalPaths+=activePath} Paths");
         return result;
       }
       #endregion
