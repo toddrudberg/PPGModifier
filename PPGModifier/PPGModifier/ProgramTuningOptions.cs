@@ -8,6 +8,10 @@ public sealed class ProgramTuningOptions
   [DefaultValue("F6")]
   public string NumberFormat { get; set; } = "F6";
 
+  [Category("Block Spacing"), DisplayName("Apply Block Spacing"), Description("Do you want to adjust block spacing?")]
+  [DefaultValue(false)]
+  public bool BlockSpacingApply { get; set; } = false;
+
   [Category("Block Spacing"), DisplayName("Min Spacing (mm)"), Description("Minimum distance to print a line")]
   [DefaultValue(10.0)]
   public double MinSpacing { get; set; } = 10.0;
@@ -16,34 +20,40 @@ public sealed class ProgramTuningOptions
   [DefaultValue(10.0)]
   public double MinAngleChange { get; set; } = 10.0;
 
-  [Category("Logic"), DisplayName("Use Override Feed Rates")]
+  [Category("Feed Rates"), DisplayName("1 - Use Override Feed Rates")]
   [DefaultValue(true)]
   public bool UseOverrideFeedRates { get; set; } = false;
 
-  [Category("Feed Rates"), DisplayName("On Course FR (mm/s)"), Description("How fast do you want to print?")]
+  [Category("Feed Rates"), DisplayName("3 - On Course FR (mm/s)"), Description("How fast do you want to print (500 mm/s max)?")]
   [DefaultValue(500)]
   public double OnCourseFeedRate { get; set; } = 400;
 
-  [Category("Feed Rates"), DisplayName("On Course FR First Layer (mm/s)"), Description("Sort Course FeedRate?")]
+  [Category("Feed Rates"), DisplayName("2 - On Course FR First Layer (mm/s)"), Description("Sort Course FeedRate (500 mm/s max)?")]
   [DefaultValue(200)]
-  public double OnCourseFeedRateFirstLayer { get; set; } = 10;
+  public double OnCourseFeedRateFirstLayer { get; set; } = 200;
 
-  [Category("Feed Rates"), DisplayName("Transit Feedrate (mm/s)"), Description("How fast do you rapid traverse?")]
+  [Category("Feed Rates"), DisplayName("4 - Exit Feedrate (mm/s)"), Description("Exit FeedRate (500 mm/s max, 50 default)?")]
+  [DefaultValue(50)]
+  public double ExitFeedRate { get; set; } = 50;
+
+  [Category("Feed Rates"), DisplayName("5 - Transit Feedrate (mm/s)"), Description("How fast do you rapid traverse (1500 mm/s max)?")]
   [DefaultValue(1500)]
   public double TransitFeedRate { get; set; } = 1500;
 
-  [Category("Process Items"), DisplayName("Tack Compaction Force (N)"), Description("Just do something!")]
+  [Category("Process Items"), DisplayName("1 - Apply Process Item Overrides")]
+  [DefaultValue(true)]
+  public bool UseProcessItems { get; set; } = true;
+
+  [Category("Process Items"), DisplayName("2 - Tack Compaction Force (N)"), Description("Just do something!")]
   [DefaultValue(4.0)]
   public double TackCompactionForce { get; set; } = 4.0;
 
-  [Category("Process Items"), DisplayName("Course Compaction Force (N)"), Description("Just do something!")]
+  [Category("Process Items"), DisplayName("2 - Course Compaction Force (N)"), Description("Just do something!")]
   [DefaultValue(2.5)]
-
   public double CourseCompactionForce { get; set; } = 2.5;
 
-  [Category("Process Items"), DisplayName("Nozzle Temp (deg C)"), Description("Just do something!")]
+  [Category("Process Items"), DisplayName("3 - Nozzle Temp (deg C)"), Description("Just do something!")]
   [DefaultValue(70)]
-
   public double nozzleTemp { get; set; } = 70.0;
 
   [Category("Logic"), DisplayName("Remove courseRetract")]
@@ -51,16 +61,51 @@ public sealed class ProgramTuningOptions
   public bool Remove_courseRetract { get; set; } = false;
 
   [Category("Logic"), DisplayName("Stop on Cut")]
-  [DefaultValue(true)]
+  [DefaultValue(false)]
   public bool StopOnCut { get; set; } = false;
-
-  [Category("Logic"), DisplayName("Apply Process Item Overrides")]
-  [DefaultValue(true)]
-  public bool UseProcessItems { get; set; } = true;
 
   [Category("Logic"), DisplayName("Insert Cycle832 (rotator friendly)")]
   [DefaultValue(true)]
   public bool UseCycle832 { get; set; } = true;
+
+  [Category("UV Control"), DisplayName("1 - Override UV Parameters")]
+  [DefaultValue(true)]
+  public bool OverrideUVParameters { get; set; } = true;
+
+  [Category("UV Control"), DisplayName("2 - UVMULT"), Description("Scaler for the UV process")]
+  [DefaultValue(1.0)]
+
+  public double UVMult { get; set; } = 1.0;
+
+  [Category("UV Control"), DisplayName("3 - Tack offset")]
+  [Description("Default: 5000")]
+  [DefaultValue(5000.0)]
+  public double UVTackOffset { get; set; } = 5000d;
+
+  [Category("UV Control"), DisplayName("4 - Tack slope")]
+  [DefaultValue(675.0)]
+  [Description("Default: 675")]
+  public double UVTackSlope { get; set; } = 675d;
+
+  [Category("UV Control"), DisplayName("5 - Course offset leading")]
+  [DefaultValue(1300.0)]
+  [Description("Default: 1300")]
+  public double UVCourseOffsetLeading { get; set; } = 1300d;
+
+  [Category("UV Control"), DisplayName("6 - Course slope leading")]
+  [DefaultValue(100.0)]
+  [Description("Default: 100")]
+  public double UVCourseSlopeLeading { get; set; } = 100d;
+
+  [Category("UV Control"), DisplayName("7 - Course offset trailing")]
+  [DefaultValue(1300.0)]
+  [Description("Default: 1300")]
+  public double UVCourseOffsetTrailing { get; set; } = 1300d;
+
+  [Category("UV Control"), DisplayName("8 - Course slope trailing")]
+  [DefaultValue(175.0)]
+  [Description("Default: 175")]
+  public double UVCourseSlopeTrailing { get; set; } = 175d;
 
 
   // JSON persistence
@@ -73,12 +118,6 @@ public sealed class ProgramTuningOptions
     }
     catch { /* fall back to defaults */ }
     return new ProgramTuningOptions();
-  }
-
-  public void Save(string path)
-  {
-    var json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
-    File.WriteAllText(path, json);
   }
 
   public static void SaveAs(string path, ProgramTuningOptions opts)

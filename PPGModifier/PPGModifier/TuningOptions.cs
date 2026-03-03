@@ -21,8 +21,11 @@ namespace PPGModifier
     {
       InitializeComponent();
       _original = options;
-      Options = Clone(options);                 // work on a copy
+      Options = options;                 // work on a copy
       propertyGrid1.SelectedObject = Options;
+      propertyGrid1.CommandsVisibleIfAvailable = true;
+      var obj = propertyGrid1.SelectedObject;
+      var pd = TypeDescriptor.GetProperties(obj)["UVTackOffset"];
       Text = "Program Tuning";
       AcceptButton = btnOK; CancelButton = btnCancel;
     }
@@ -36,18 +39,6 @@ namespace PPGModifier
       propertyGrid1.SelectedObject = Options;
     }
 
-    private static ProgramTuningOptions Clone(ProgramTuningOptions src)
-    {
-      var json = System.Text.Json.JsonSerializer.Serialize(src);
-      return System.Text.Json.JsonSerializer.Deserialize<ProgramTuningOptions>(json)!;
-    }
-
-    protected override void OnLoad(EventArgs e)
-    {
-      base.OnLoad(e);
-      EnsureOnScreen(this);
-      ForceVisible(this);
-    }
 
     static void EnsureOnScreen(Form f)
     {
@@ -90,5 +81,6 @@ namespace PPGModifier
     {
       this.StartPosition = FormStartPosition.CenterParent;
     }
+
   }
 }

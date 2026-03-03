@@ -28,88 +28,39 @@
     /// </summary>
     private void InitializeComponent()
     {
-      btnDoIt = new Button();
-      btnDecoupleROTX = new Button();
-      btnMoveCompaction = new Button();
-      btnMoveCutPrepare = new Button();
+      System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmPPGModifier));
       btnDoTheThingv1_12 = new Button();
       SuspendLayout();
       // 
-      // btnDoIt
-      // 
-      btnDoIt.Location = new Point(158, 209);
-      btnDoIt.Margin = new Padding(1);
-      btnDoIt.Name = "btnDoIt";
-      btnDoIt.Size = new Size(331, 41);
-      btnDoIt.TabIndex = 0;
-      btnDoIt.Text = "Do The Thing";
-      btnDoIt.UseVisualStyleBackColor = true;
-      btnDoIt.Click += btnDoIt_Click;
-      // 
-      // btnDecoupleROTX
-      // 
-      btnDecoupleROTX.Location = new Point(158, 270);
-      btnDecoupleROTX.Name = "btnDecoupleROTX";
-      btnDecoupleROTX.Size = new Size(331, 39);
-      btnDecoupleROTX.TabIndex = 1;
-      btnDecoupleROTX.Text = "Decouple ROTX";
-      btnDecoupleROTX.UseVisualStyleBackColor = true;
-      btnDecoupleROTX.Click += btnDecoupleROTX_Click;
-      // 
-      // btnMoveCompaction
-      // 
-      btnMoveCompaction.Location = new Point(158, 325);
-      btnMoveCompaction.Name = "btnMoveCompaction";
-      btnMoveCompaction.Size = new Size(331, 39);
-      btnMoveCompaction.TabIndex = 2;
-      btnMoveCompaction.Text = "Move Compaction Brake";
-      btnMoveCompaction.UseVisualStyleBackColor = true;
-      btnMoveCompaction.Click += btnMoveCompactionBrake;
-      // 
-      // btnMoveCutPrepare
-      // 
-      btnMoveCutPrepare.Location = new Point(158, 381);
-      btnMoveCutPrepare.Name = "btnMoveCutPrepare";
-      btnMoveCutPrepare.Size = new Size(331, 39);
-      btnMoveCutPrepare.TabIndex = 3;
-      btnMoveCutPrepare.Text = "Move Cut Prepare";
-      btnMoveCutPrepare.UseVisualStyleBackColor = true;
-      btnMoveCutPrepare.Click += btnMoveCutPrepare_Click;
-      // 
       // btnDoTheThingv1_12
       // 
-      btnDoTheThingv1_12.Location = new Point(158, 156);
+      btnDoTheThingv1_12.Location = new Point(176, 19);
       btnDoTheThingv1_12.Margin = new Padding(1);
       btnDoTheThingv1_12.Name = "btnDoTheThingv1_12";
       btnDoTheThingv1_12.Size = new Size(331, 41);
       btnDoTheThingv1_12.TabIndex = 4;
       btnDoTheThingv1_12.Text = "Do The Thing 1.12";
       btnDoTheThingv1_12.UseVisualStyleBackColor = true;
-      btnDoTheThingv1_12.Click += this.btnDoTheThingv1_12_Click;
+      btnDoTheThingv1_12.Click += btnDoTheThingv1_12_Click;
       // 
       // frmPPGModifier
       // 
       AutoScaleDimensions = new SizeF(7F, 15F);
       AutoScaleMode = AutoScaleMode.Font;
+      BackgroundImage = (Image)resources.GetObject("$this.BackgroundImage");
+      BackgroundImageLayout = ImageLayout.Stretch;
       ClientSize = new Size(705, 546);
       Controls.Add(btnDoTheThingv1_12);
-      Controls.Add(btnMoveCutPrepare);
-      Controls.Add(btnMoveCompaction);
-      Controls.Add(btnDecoupleROTX);
-      Controls.Add(btnDoIt);
+      DoubleBuffered = true;
+      Icon = (Icon)resources.GetObject("$this.Icon");
       Margin = new Padding(1);
       Name = "frmPPGModifier";
-      Text = "Form1";
+      Text = "PPG Toolkit";
       Load += frmPPGModifier_Load;
       ResumeLayout(false);
     }
 
     #endregion
-
-    private Button btnDoIt;
-    private Button btnDecoupleROTX;
-    private Button btnMoveCompaction;
-    private Button btnMoveCutPrepare;
     private Button btnDoTheThingv1_12;
   }
 }

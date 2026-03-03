@@ -31,6 +31,7 @@
       propertyGrid1 = new PropertyGrid();
       btnOK = new Button();
       btnCancel = new Button();
+      btnReset = new Button();
       SuspendLayout();
       // 
       // propertyGrid1
@@ -51,6 +52,7 @@
       btnOK.TabIndex = 1;
       btnOK.Text = "OK";
       btnOK.UseVisualStyleBackColor = true;
+      btnOK.Click += btnOK_Click;
       // 
       // btnCancel
       // 
@@ -62,12 +64,26 @@
       btnCancel.TabIndex = 2;
       btnCancel.Text = "Cancel";
       btnCancel.UseVisualStyleBackColor = true;
+      btnCancel.Click += btnCancel_Click;
+      // 
+      // btnReset
+      // 
+      btnReset.DialogResult = DialogResult.Cancel;
+      btnReset.Location = new Point(459, 555);
+      btnReset.Margin = new Padding(1);
+      btnReset.Name = "btnReset";
+      btnReset.Size = new Size(131, 21);
+      btnReset.TabIndex = 3;
+      btnReset.Text = "Reset to Defaults";
+      btnReset.UseVisualStyleBackColor = true;
+      btnReset.Click += btnReset_Click;
       // 
       // TuningDialog
       // 
       AutoScaleDimensions = new SizeF(7F, 15F);
       AutoScaleMode = AutoScaleMode.Font;
-      ClientSize = new Size(827, 580);
+      ClientSize = new Size(827, 595);
+      Controls.Add(btnReset);
       Controls.Add(btnCancel);
       Controls.Add(btnOK);
       Controls.Add(propertyGrid1);
@@ -83,5 +99,6 @@
     private PropertyGrid propertyGrid1;
     private Button btnOK;
     private Button btnCancel;
+    private Button btnReset;
   }
 }
