@@ -30,6 +30,9 @@
     {
       System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmPPGModifier));
       btnDoTheThingv1_12 = new Button();
+      progressBar1 = new ProgressBar();
+      label1 = new Label();
+      linkLabel1 = new LinkLabel();
       SuspendLayout();
       // 
       // btnDoTheThingv1_12
@@ -43,6 +46,31 @@
       btnDoTheThingv1_12.UseVisualStyleBackColor = true;
       btnDoTheThingv1_12.Click += btnDoTheThingv1_12_Click;
       // 
+      // progressBar1
+      // 
+      progressBar1.Location = new Point(176, 64);
+      progressBar1.Name = "progressBar1";
+      progressBar1.Size = new Size(331, 23);
+      progressBar1.TabIndex = 5;
+      // 
+      // label1
+      // 
+      label1.Location = new Point(176, 90);
+      label1.Name = "label1";
+      label1.Size = new Size(331, 23);
+      label1.TabIndex = 6;
+      label1.Text = "label1";
+      // 
+      // linkLabel1
+      // 
+      linkLabel1.Location = new Point(76, 113);
+      linkLabel1.Name = "linkLabel1";
+      linkLabel1.Size = new Size(505, 23);
+      linkLabel1.TabIndex = 7;
+      linkLabel1.TabStop = true;
+      linkLabel1.Text = "linkLabel1";
+      linkLabel1.MouseUp += linkLabel1_MouseUp;
+      // 
       // frmPPGModifier
       // 
       AutoScaleDimensions = new SizeF(7F, 15F);
@@ -50,6 +78,9 @@
       BackgroundImage = (Image)resources.GetObject("$this.BackgroundImage");
       BackgroundImageLayout = ImageLayout.Stretch;
       ClientSize = new Size(705, 546);
+      Controls.Add(linkLabel1);
+      Controls.Add(label1);
+      Controls.Add(progressBar1);
       Controls.Add(btnDoTheThingv1_12);
       DoubleBuffered = true;
       Icon = (Icon)resources.GetObject("$this.Icon");
@@ -62,5 +93,8 @@
 
     #endregion
     private Button btnDoTheThingv1_12;
+    private ProgressBar progressBar1;
+    private Label label1;
+    private LinkLabel linkLabel1;
   }
 }

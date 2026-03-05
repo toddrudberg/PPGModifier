@@ -88,11 +88,38 @@ namespace PPGModifier
       base.OnResize(e);
 
       btnDoTheThingv1_12.Left = (this.ClientSize.Width - btnDoTheThingv1_12.Width) / 2;
+      progressBar1.Left = (this.ClientSize.Width - progressBar1.Width) / 2;
+      progressBar1.Visible = false;
+      void AdjustLabels(Label label)
+      {
+        label.Text = "";
+        label.BackColor = Color.Transparent;
+        label.TextAlign = ContentAlignment.MiddleCenter;
+        label.Left = (this.ClientSize.Width - label.Width) / 2;
+      }
+      AdjustLabels(label1);
+      AdjustLabels(linkLabel1);
     }
 
+    private void linkLabel1_MouseUp(object sender, MouseEventArgs e)
+    {
+      if (e.Button == MouseButtons.Left)
+      {
+        string file = linkLabel1.Links[0].LinkData as string;
 
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+        {
+          FileName = file,
+          UseShellExecute = true
+        });
+      }
+      if (e.Button == MouseButtons.Right)
+      {
+        string file = linkLabel1.Links[0].LinkData as string;
 
-
+        System.Diagnostics.Process.Start("explorer.exe", "/select,\"" + file + "\"");
+      }
+    }
 
     private void btnDoTheThingv1_12_Click(object sender, EventArgs e)
     {
@@ -156,13 +183,18 @@ namespace PPGModifier
       string directory = Path.GetDirectoryName(ofd.FileName);
       string filenameWithoutExt = Path.GetFileNameWithoutExtension(ofd.FileName);
       string outputFileName = Path.Combine(directory, filenameWithoutExt + "_bs.mpf");
-
-      ProgramConversions.updateProgram(ofd.FileName, outputFileName, _opts);
+      progressBar1.Visible = true;
+      ProgramConversions.updateProgram(ofd.FileName, outputFileName, _opts, this.progressBar1);
       string outputFileTunringUsedName = outputFileName.Replace("_bs.mpf", "_opts.json");
       ProgramTuningOptions.SaveAs(outputFileTunringUsedName, _opts);
-
+      label1.Text = $"File output to:";
+      linkLabel1.Text = outputFileName;
+      linkLabel1.Links.Clear();
+      linkLabel1.Links.Add(0, linkLabel1.Text.Length, outputFileName);
 
       this.Enabled = true;
     }
+
+
   }
 }

@@ -18,7 +18,7 @@ namespace ToddUtils
 {
   public class ProgramConversions
   {
-    internal static void updateProgram(string filename, string outputFilename, ProgramTuningOptions options)
+    internal static void updateProgram(string filename, string outputFilename, ProgramTuningOptions options, ProgressBar progressBar)
     {
       string numberFormat = "F6";
 
@@ -108,11 +108,7 @@ namespace ToddUtils
             fp.GetArgument(thisline, "N", out double Nnum, false);
             thisline = $"N{(int)Nnum} NOZZLE_TEMP_SET({options.nozzleTemp:F3})";
           }
-          if( line.Contains("UVMULT="))
-          {
-            fp.GetArgument(thisline, "N", out double Nnum, false);
-            thisline = $"N{(int)Nnum} UVMULT={options.UVMult:F3}";
-          }
+
 
           result.Add(thisline);
         }
@@ -174,8 +170,7 @@ namespace ToddUtils
                     result.Add(line);
                     if( line.Contains("G9") && options.StopOnCut)
                     {
-                      //result.Add("M61"); removed for testing
-                      if (options.UseCycle832)
+                      if (options.UseCycle832 && !options.DoGoska)
                       {
                         result.Add("CYCLE832(5,_ROUGH,1)");
                       }
@@ -214,20 +209,30 @@ namespace ToddUtils
           
           if( thisline.Contains("G603"))
           {
-            if (options.UseCycle832)
+            if (!options.DoGoska)
             {
-              result.Add("CYCLE832(5,_ROUGH,1)");
+              if (options.UseCycle832)
+              {
+                result.Add("CYCLE832(5,_ROUGH,1)");
+              }
+              result.Add("SOFT");
             }
-            result.Add("SOFT");
           }
           else if (thisline.Contains("FEED")) //BRISK is moved to CCI_INIT
           {
             result.Add(thisline);
-            if (options.UseCycle832)
+            if (!options.DoGoska)
             {
-              result.Add("CYCLE832(0,_OFF,1)");
+              if (options.UseCycle832)
+              {
+                result.Add("CYCLE832(0,_OFF,1)");
+              }
+              result.Add("BRISK");
             }
-            result.Add("BRISK");
+            else
+            {
+              result.Add("CYCLE832(0.2,_ORI_ROUGH,.5)");
+            }
           }
           //else if (thisline.Contains("G9"))
           //{
@@ -369,9 +374,49 @@ namespace ToddUtils
           {
             newline = CalculateUVParameters("TACK_UV_MAP_TRAILING", options.UVTackSlope, (double)options.UVTackOffset);
           }
+          else if (line.Contains("UVMULT="))
+          {
+            fp.GetArgument(newline, "N", out double Nnum, false);
+            newline = $"N{(int)Nnum} UVMULT={options.UVMult:F3}";
+          }
           result.Add(newline);
         }
 
+        return result;
+      }
+
+      List<string> InsertM61(List<string> output, ProgramTuningOptions options)
+      {
+        if(!options.InsertM61)
+        {
+          return output;
+        }
+        FileParser.cFileParse fp = new cFileParse();
+        List<string> result = new List<string>();
+
+        cMotionArguments args = new cMotionArguments();
+        bool DistLastScan = false;
+
+        for (int ii = 0; ii < output.Count; ii++)
+        {
+          string line = output[ii];
+          if (line.Contains("G1") || line.Contains("G9"))
+          {
+            if( line.Contains("DIST="))
+            {
+              if(!DistLastScan)
+              {
+                result.Add("M61 ; (Wait for previous cycle to complete)");
+              }
+              DistLastScan = true;
+            }
+            else
+            {
+              DistLastScan = false;
+            }
+          }
+          result.Add(line);
+        }
         return result;
       }
 
@@ -459,15 +504,16 @@ namespace ToddUtils
       }
       #endregion
 
-      output = ApplyFeedrate(output, options);
-      output = ApplyProcessItems(output, options);
-      output = ApplyBlockSpacingRules(output, options);
-      output = ApplyInterpolationMode(output, options);
-
-      output = ApplyUVParameters(output, options);
-      output = SetOffPartTime(output, options);
-      output = RenumberPartProgram(output);
-      List<string> summary = CollectStats(output);
+      progressBar.Value = 0;
+      output = ApplyFeedrate(output, options); progressBar.Value += 10;
+      output = ApplyProcessItems(output, options); progressBar.Value += 10;
+      output = ApplyBlockSpacingRules(output, options); progressBar.Value += 10;
+      output = ApplyInterpolationMode(output, options); progressBar.Value += 10;
+      output = ApplyUVParameters(output, options); progressBar.Value += 10;
+      output = SetOffPartTime(output, options); progressBar.Value += 10;
+      output = InsertM61(output, options); progressBar.Value += 10;
+      output = RenumberPartProgram(output); progressBar.Value += 10;
+      List<string> summary = CollectStats(output); progressBar.Value += 10;
 
       //output the results:
       string text = string.Join(Environment.NewLine, output);
@@ -493,6 +539,7 @@ namespace ToddUtils
       {
         Console.WriteLine(line);
       }
+      progressBar.Value = progressBar.Maximum;
     }
     
   }

@@ -8,6 +8,8 @@ public sealed class ProgramTuningOptions
   [DefaultValue("F6")]
   public string NumberFormat { get; set; } = "F6";
 
+  #region Block Spacing
+
   [Category("Block Spacing"), DisplayName("Apply Block Spacing"), Description("Do you want to adjust block spacing?")]
   [DefaultValue(false)]
   public bool BlockSpacingApply { get; set; } = false;
@@ -19,7 +21,9 @@ public sealed class ProgramTuningOptions
   [Category("Block Spacing"), DisplayName("Min Angle Change (deg)"), Description("Minimum angle change to print a line")]
   [DefaultValue(10.0)]
   public double MinAngleChange { get; set; } = 10.0;
+  #endregion
 
+  #region Feed Rates
   [Category("Feed Rates"), DisplayName("1 - Use Override Feed Rates")]
   [DefaultValue(true)]
   public bool UseOverrideFeedRates { get; set; } = false;
@@ -40,6 +44,9 @@ public sealed class ProgramTuningOptions
   [DefaultValue(1500)]
   public double TransitFeedRate { get; set; } = 1500;
 
+  #endregion
+
+  #region Process Items
   [Category("Process Items"), DisplayName("1 - Apply Process Item Overrides")]
   [DefaultValue(true)]
   public bool UseProcessItems { get; set; } = true;
@@ -55,11 +62,9 @@ public sealed class ProgramTuningOptions
   [Category("Process Items"), DisplayName("3 - Nozzle Temp (deg C)"), Description("Just do something!")]
   [DefaultValue(70)]
   public double nozzleTemp { get; set; } = 70.0;
+  #endregion
 
-  [Category("Logic"), DisplayName("Remove courseRetract")]
-  [DefaultValue(false)]
-  public bool Remove_courseRetract { get; set; } = false;
-
+  #region Logic
   [Category("Logic"), DisplayName("Stop on Cut")]
   [DefaultValue(false)]
   public bool StopOnCut { get; set; } = false;
@@ -68,13 +73,23 @@ public sealed class ProgramTuningOptions
   [DefaultValue(true)]
   public bool UseCycle832 { get; set; } = true;
 
+  [Category("Logic"), DisplayName("Insert M61")]
+  [DefaultValue(false)]
+  public bool InsertM61 { get; set; } = false;
+
+
+  [Category("Logic"), DisplayName("Goska")]
+  [DefaultValue(false)]
+  public bool DoGoska { get; set; } = false;
+  #endregion
+
+  #region UV Control
   [Category("UV Control"), DisplayName("1 - Override UV Parameters")]
   [DefaultValue(true)]
   public bool OverrideUVParameters { get; set; } = true;
 
   [Category("UV Control"), DisplayName("2 - UVMULT"), Description("Scaler for the UV process")]
   [DefaultValue(1.0)]
-
   public double UVMult { get; set; } = 1.0;
 
   [Category("UV Control"), DisplayName("3 - Tack offset")]
@@ -106,7 +121,7 @@ public sealed class ProgramTuningOptions
   [DefaultValue(175.0)]
   [Description("Default: 175")]
   public double UVCourseSlopeTrailing { get; set; } = 175d;
-
+  #endregion
 
   // JSON persistence
   public static ProgramTuningOptions Load(string path)
