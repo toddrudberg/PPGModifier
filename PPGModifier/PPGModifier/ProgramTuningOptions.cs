@@ -81,6 +81,10 @@ public sealed class ProgramTuningOptions
   [Category("Logic"), DisplayName("Goska")]
   [DefaultValue(false)]
   public bool DoGoska { get; set; } = false;
+
+  [Category("Logic"), DisplayName("ManageOffPartTime")]
+  [DefaultValue(true)]
+  public bool ManageOffpartTime { get; set; } = false;
   #endregion
 
   #region UV Control

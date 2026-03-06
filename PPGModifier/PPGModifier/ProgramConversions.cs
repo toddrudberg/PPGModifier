@@ -30,6 +30,11 @@ namespace ToddUtils
       #region helper functions
       List<string> ApplyFeedrate(List<string> output, ProgramTuningOptions options)
       {
+
+        if (!options.UseOverrideFeedRates)
+        {
+          return output;
+        }
         FileParser.cFileParse fp = new cFileParse();
         List<string> result = new List<string>();
         bool firstLayer = true;
@@ -252,7 +257,7 @@ namespace ToddUtils
       {
         List<string> result = output;
 
-        if (!options.UseOverrideFeedRates)
+        if (!options.ManageOffpartTime)
         {
           return result;
         }
