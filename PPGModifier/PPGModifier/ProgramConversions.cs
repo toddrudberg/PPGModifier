@@ -52,23 +52,38 @@ namespace ToddUtils
               if (line.Contains("F="))
               {
                 fp.ReplaceArgument(line, "F=", options.TransitFeedRate * 60, out string newline);
-                thisline = $"{newline} ; ({options.TransitFeedRate} mm/s)";
+                thisline = $"{newline} ; ({options.TransitFeedRate} mm/s Transit Feedrate)";
               }
-              if (line.Contains("WHEN TRUE DO LAYER="))
+              if (line.Contains("FEED"))
+              {
+                result.Add(line); //poop out the FEED command
+                double onCourseFeedRate = options.OnCourseFeedRate;
+                if (firstLayer)
+                {
+                  onCourseFeedRate = options.OnCourseFeedRateFirstLayer;
+                }
+                thisline = $"F={onCourseFeedRate * 60 : F0} ; ({onCourseFeedRate} mm/s On-course Feedrate for {(firstLayer == true ? "First Layer" : "2nd Layer and up")})";
                 n++;
+              }
               break;
             case 1: //onpart
               if (line.Contains("F="))
-              {
+              { // just in case there are any other F commands along this course.
                 double onCourseFeedRate = options.OnCourseFeedRate;
                 if (firstLayer)
                 {
                   onCourseFeedRate = options.OnCourseFeedRateFirstLayer;
                 }
 
-                fp.ReplaceArgument(line, "F=", onCourseFeedRate * 60, out string newline);
-                thisline = $"{newline} ; ({onCourseFeedRate} mm/s)";
+                fp.ReplaceArgument(line, "F=", onCourseFeedRate * 60, out string newline, "F0");
+                thisline = $"{newline} ; ({onCourseFeedRate} mm/s On-course Feedrate)";
               }
+              if( line.Contains("G9"))
+              {
+                result.Add(thisline); //poop out the G9 line
+                thisline = $"F={options.ExitFeedRate * 60 : F0} ;  ({options.ExitFeedRate} mm/s Exit Feedrate)";   //add the exit feedrate           
+              }
+
 
               if (line.Contains("WHEN TRUE DO LAYER="))
               {
