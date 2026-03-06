@@ -28,19 +28,19 @@ public sealed class ProgramTuningOptions
   [DefaultValue(true)]
   public bool UseOverrideFeedRates { get; set; } = false;
 
-  [Category("Feed Rates"), DisplayName("3 - On Course FR (mm/s)"), Description("How fast do you want to print (500 mm/s max)?")]
+  [Category("Feed Rates"), DisplayName("3 - On Course FR (mm/s)"), Description("General on course speed (500 mm/s max).")]
   [DefaultValue(500)]
   public double OnCourseFeedRate { get; set; } = 400;
 
-  [Category("Feed Rates"), DisplayName("2 - On Course FR First Layer (mm/s)"), Description("Sort Course FeedRate (500 mm/s max)?")]
+  [Category("Feed Rates"), DisplayName("2 - On Course FR First Layer (mm/s)"), Description("First Layer on course speed (500 mm/s max).")]
   [DefaultValue(200)]
   public double OnCourseFeedRateFirstLayer { get; set; } = 200;
 
-  [Category("Feed Rates"), DisplayName("4 - Exit Feedrate (mm/s)"), Description("Exit FeedRate (500 mm/s max, 50 default)?")]
+  [Category("Feed Rates"), DisplayName("4 - Exit Feedrate (mm/s)"), Description("Exit FeedRate (500 mm/s max, 50 default).  From the end of cut to end of part.  Especially effective during stop on cut.  A slower speed straightens the tails and allows more UV cure which holds the ends down and makes subsquent layers easier to print.")]
   [DefaultValue(50)]
   public double ExitFeedRate { get; set; } = 50;
 
-  [Category("Feed Rates"), DisplayName("5 - Transit Feedrate (mm/s)"), Description("How fast do you rapid traverse (1500 mm/s max)?")]
+  [Category("Feed Rates"), DisplayName("5 - Transit Feedrate (mm/s)"), Description("Rapid traverse speed (1500 mm/s max).")]
   [DefaultValue(1500)]
   public double TransitFeedRate { get; set; } = 1500;
 
@@ -51,40 +51,40 @@ public sealed class ProgramTuningOptions
   [DefaultValue(true)]
   public bool UseProcessItems { get; set; } = true;
 
-  [Category("Process Items"), DisplayName("2 - Tack Compaction Force (N)"), Description("Just do something!")]
+  [Category("Process Items"), DisplayName("2 - Tack Compaction Force (N)"), Description("4-6N generally")]
   [DefaultValue(4.0)]
   public double TackCompactionForce { get; set; } = 4.0;
 
-  [Category("Process Items"), DisplayName("2 - Course Compaction Force (N)"), Description("Just do something!")]
+  [Category("Process Items"), DisplayName("2 - Course Compaction Force (N)"), Description("2-4N generally")]
   [DefaultValue(2.5)]
   public double CourseCompactionForce { get; set; } = 2.5;
 
-  [Category("Process Items"), DisplayName("3 - Nozzle Temp (deg C)"), Description("Just do something!")]
+  [Category("Process Items"), DisplayName("3 - Nozzle Temp (deg C)"), Description("60 for Ceremat, 70 for Aero.")]
   [DefaultValue(70)]
   public double nozzleTemp { get; set; } = 70.0;
   #endregion
 
   #region Interpolation Items
 
-  [Category("Interpolation Control"), DisplayName("Hard Interpolation (flat part)")]
+  [Category("Interpolation Control"), DisplayName("Hard Interpolation (flat part)"), Description("Better for flat parts.  You get more honest motion and better coordination with the FWM.  Quicker response for all regimes of motion and especially offpart.")]
   [DefaultValue(false)]
   public bool HardInterpolation { get; set; } = true;
 
-  [Category("Interpolation Control"), DisplayName("Super Soft Interpolation (rotator)")]
+  [Category("Interpolation Control"), DisplayName("Super Soft Interpolation (rotator)"), Description("Very soft interpolation.  Generally good for rotator.  Adds 2-3s per course of calculation overhead.")]
   [DefaultValue(false)]
   public bool SoftInterpolation { get; set; } = false;
   #endregion
 
   #region Logic
-  [Category("Logic"), DisplayName("Stop on Cut")]
+  [Category("Logic"), DisplayName("Stop on Cut"), Description("Required for all non-cut-on-the-fly machines.  Currently only Mercury will get this upgrade.")]
   [DefaultValue(false)]
   public bool StopOnCut { get; set; } = false;
 
-  [Category("Logic"), DisplayName("Insert M61")]
+  [Category("Logic"), DisplayName("Insert M61"), Description("Soon this will be required on all machins.  As of this writing on only 1506 needs M61.")]
   [DefaultValue(false)]
   public bool InsertM61 { get; set; } = false;
 
-  [Category("Logic"), DisplayName("ManageOffPartTime")]
+  [Category("Logic"), DisplayName("ManageOffPartTime"), Description("Required on all machines except 1506.  M61 handles this in the future.  Before M61, I was required to manage the time from the end of a course to the start of a next.  If the time falls below a threashold, I calculate the maximum speed required to ensure this threashold is met and overwrite the programmed off-part feedrate.")]
   [DefaultValue(true)]
   public bool ManageOffpartTime { get; set; } = false;
   #endregion

@@ -38,7 +38,7 @@ namespace ToddUtils
         FileParser.cFileParse fp = new cFileParse();
         List<string> result = new List<string>();
         bool firstLayer = true;
-        int n = 0;
+        int step = 0;
         foreach (string line in output)
         {
           string thisline = line;
@@ -46,33 +46,61 @@ namespace ToddUtils
           {
             firstLayer = false;
           }
-          switch (n)
+          switch (step)
           {
             case 0: //offpart
               if (line.Contains("F="))
               {
-                fp.ReplaceArgument(line, "F=", options.TransitFeedRate * 60, out string newline);
-                thisline = $"{newline} ; ({options.TransitFeedRate} mm/s)";
+                fp.ReplaceArgument(line, "F=", options.TransitFeedRate * 60, out string newline, "F0");
+                thisline = $"{newline} ; ({options.TransitFeedRate} mm/s Transit Feedrate)";
               }
-              if (line.Contains("WHEN TRUE DO LAYER="))
-                n++;
-              break;
-            case 1: //onpart
-              if (line.Contains("F="))
+              if( line.Contains("APPROACH"))
               {
+                step++;
+              }
+              break;
+            case 1:
+              if( line.Contains("F="))
+              {
+                //throw this line out
+                thisline = $"; {thisline} ; throwing out this F command.";
+              }
+              if (line.Contains("FEED"))
+              {
+                //result.Add(line); //poop out the FEED command Feedrate must be before the FEED command!
+                double onCourseFeedRate = options.OnCourseFeedRate;
+                if (firstLayer)
+                {
+                  onCourseFeedRate = options.OnCourseFeedRateFirstLayer;
+                }
+                thisline = $"F={(onCourseFeedRate * 60):F0} ; ({onCourseFeedRate} mm/s On-course Feedrate for {(firstLayer == true ? "First Layer" : "2nd Layer and up")} - note must be prior to FEED)";
+                result.Add(thisline);
+                thisline = line;
+                step++;
+              }
+              break;
+            case 2: //onpart
+              if (line.Contains("F="))
+              { // just in case there are any other F commands along this course.
                 double onCourseFeedRate = options.OnCourseFeedRate;
                 if (firstLayer)
                 {
                   onCourseFeedRate = options.OnCourseFeedRateFirstLayer;
                 }
 
-                fp.ReplaceArgument(line, "F=", onCourseFeedRate * 60, out string newline);
-                thisline = $"{newline} ; ({onCourseFeedRate} mm/s)";
+                fp.ReplaceArgument(line, "F=", onCourseFeedRate * 60, out string newline, "F0");
+                thisline = $"{newline} ; ({onCourseFeedRate} mm/s On-course Feedrate)";
               }
+              if( line.Contains("G9"))
+              {
+                result.Add(thisline); //poop out the G9 line
+                thisline = $"F={(options.ExitFeedRate * 60):F0} ;  ({options.ExitFeedRate} mm/s Exit Feedrate)";   //add the exit feedrate           
+              }
+
 
               if (line.Contains("WHEN TRUE DO LAYER="))
               {
-                n = 0;
+                step = 0;
               }
 
               break;

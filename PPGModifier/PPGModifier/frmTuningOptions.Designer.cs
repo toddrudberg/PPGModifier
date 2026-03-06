@@ -39,13 +39,13 @@
       propertyGrid1.Location = new Point(5, 10);
       propertyGrid1.Margin = new Padding(1);
       propertyGrid1.Name = "propertyGrid1";
-      propertyGrid1.Size = new Size(803, 543);
+      propertyGrid1.Size = new Size(803, 580);
       propertyGrid1.TabIndex = 0;
       // 
       // btnOK
       // 
       btnOK.DialogResult = DialogResult.OK;
-      btnOK.Location = new Point(301, 555);
+      btnOK.Location = new Point(258, 623);
       btnOK.Margin = new Padding(1);
       btnOK.Name = "btnOK";
       btnOK.Size = new Size(77, 21);
@@ -57,7 +57,7 @@
       // btnCancel
       // 
       btnCancel.DialogResult = DialogResult.Cancel;
-      btnCancel.Location = new Point(380, 555);
+      btnCancel.Location = new Point(337, 623);
       btnCancel.Margin = new Padding(1);
       btnCancel.Name = "btnCancel";
       btnCancel.Size = new Size(77, 21);
@@ -69,7 +69,7 @@
       // btnReset
       // 
       btnReset.DialogResult = DialogResult.Cancel;
-      btnReset.Location = new Point(459, 555);
+      btnReset.Location = new Point(416, 623);
       btnReset.Margin = new Padding(1);
       btnReset.Name = "btnReset";
       btnReset.Size = new Size(131, 21);
@@ -82,7 +82,7 @@
       // 
       AutoScaleDimensions = new SizeF(7F, 15F);
       AutoScaleMode = AutoScaleMode.Font;
-      ClientSize = new Size(827, 595);
+      ClientSize = new Size(827, 654);
       Controls.Add(btnReset);
       Controls.Add(btnCancel);
       Controls.Add(btnOK);
