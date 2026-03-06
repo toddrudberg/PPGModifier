@@ -173,15 +173,6 @@ namespace ToddUtils
                   if ((line.Contains("G9") && options.StopOnCut) || (dist >= options.MinSpacing || du >= options.MinAngleChange))
                   {
                     result.Add(line);
-                    if( line.Contains("G9") && options.StopOnCut)
-                    {
-                      if (options.UseCycle832 && !options.DoGoska)
-                      {
-                        result.Add("CYCLE832(5,_ROUGH,1)");
-                      }
-                      result.Add($"F={options.ExitFeedRate*60:F0} ; ({options.ExitFeedRate}mm/s)");
-                      //result.Add("SOFT");
-                    }
                     lastMotionArgs = motionArguments;
                   }
                 }
@@ -207,49 +198,76 @@ namespace ToddUtils
         FileParser.cFileParse fp = new cFileParse();
         List<string> result = new List<string>();
 
-        int n = 0;
-        foreach (string line in output)
+        if (options.HardInterpolation)
         {
-          string thisline = line;
-          
-          if( thisline.Contains("G603"))
+          int step = 0;
+          for (int i = 0; i < output.Count; i++)
           {
-            if (!options.DoGoska)
+            string line = output[i];
+            switch (step)
             {
-              if (options.UseCycle832)
-              {
-                result.Add("CYCLE832(5,_ROUGH,1)");
-              }
-              result.Add("SOFT");
-            }
+              case 0: //find the begginning of the program
+                if ((line.Contains("G1") || line.Contains("G9")) && line.Contains("DIST="))
+                {
+                  result.Add("SOFT ; (soften the initial approach move)"); // this softens the approach move
+                  step++;
+                }
+                result.Add(line);
+                break;
+              case 1:
+                result.Add(line);
+                if ( line.Contains("FEED"))
+                {
+                  result.Add("BRISK ; (harden the path)");
+                  result.Add("CYCLE832(0,_OFF,1) ; (ensure Cycle832 is dissabled)");
+                  step++;
+                }
+                break;
+              case 2:
+                
+                result.Add(line);
+
+                if (!options.StopOnCut)
+                  step++;
+                else if( line.Contains("G9"))
+                {
+                  result.Add("SOFT ; (soften the cut accel and offpart move)");
+                  step++;
+                }
+                
+                break;
+
+              case 3:
+                if (line.Contains("M63"))
+                {
+                  result.Add("SOFT ; (soften offpart moves)");
+                  step = 1;
+                }
+                result.Add(line);
+                break;
+            }            
           }
-          else if (thisline.Contains("FEED")) //BRISK is moved to CCI_INIT
+        }
+        else if (options.SoftInterpolation)
+        {
+          foreach (string line in output)
           {
-            result.Add(thisline);
-            if (!options.DoGoska)
+            string thisline = line;
+            if (thisline.Contains("FEED")) //BRISK is moved to CCI_INIT
             {
-              if (options.UseCycle832)
-              {
-                result.Add("CYCLE832(0,_OFF,1)");
-              }
-              result.Add("BRISK");
+              result.Add(thisline);
+              result.Add("CYCLE832(0.2,_ORI_ROUGH,.5)");
             }
             else
             {
-              result.Add("CYCLE832(0.2,_ORI_ROUGH,.5)");
+              result.Add($"{thisline}");
             }
           }
-          //else if (thisline.Contains("G9"))
-          //{
-
-          //}
-          else
-          {
-            result.Add($"{thisline}");
-          }
-
         }
-
+        else
+        {// do nothing
+          return output;
+        }
         return result;
       }
 

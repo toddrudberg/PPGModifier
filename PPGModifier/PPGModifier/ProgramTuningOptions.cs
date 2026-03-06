@@ -64,23 +64,25 @@ public sealed class ProgramTuningOptions
   public double nozzleTemp { get; set; } = 70.0;
   #endregion
 
+  #region Interpolation Items
+
+  [Category("Interpolation Control"), DisplayName("Hard Interpolation (flat part)")]
+  [DefaultValue(false)]
+  public bool HardInterpolation { get; set; } = true;
+
+  [Category("Interpolation Control"), DisplayName("Super Soft Interpolation (rotator)")]
+  [DefaultValue(false)]
+  public bool SoftInterpolation { get; set; } = false;
+  #endregion
+
   #region Logic
   [Category("Logic"), DisplayName("Stop on Cut")]
   [DefaultValue(false)]
   public bool StopOnCut { get; set; } = false;
 
-  [Category("Logic"), DisplayName("Insert Cycle832 (rotator friendly)")]
-  [DefaultValue(true)]
-  public bool UseCycle832 { get; set; } = true;
-
   [Category("Logic"), DisplayName("Insert M61")]
   [DefaultValue(false)]
   public bool InsertM61 { get; set; } = false;
-
-
-  [Category("Logic"), DisplayName("Goska")]
-  [DefaultValue(false)]
-  public bool DoGoska { get; set; } = false;
 
   [Category("Logic"), DisplayName("ManageOffPartTime")]
   [DefaultValue(true)]
