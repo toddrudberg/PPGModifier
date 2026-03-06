@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>PPGModifier.ico</ApplicationIcon>
+    <AssemblyName>PPGToolkit</AssemblyName>
+    <RootNamespace>PPGToolkit</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="PPGModifier.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pastel" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\FileParser\FileParser\FileParser.csproj" />
+    <ProjectReference Include="..\..\..\LHT\LHT\ClassLibrary1\LHTLibrary.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>
