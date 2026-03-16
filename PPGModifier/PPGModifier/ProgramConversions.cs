@@ -56,6 +56,8 @@ namespace ToddUtils
               }
               if( line.Contains("APPROACH"))
               {
+                result.Add(line);
+                thisline = $"F={options.TransitFeedRate * 60:F0} ; ({options.TransitFeedRate} mm/s Transit Feedrate)";
                 step++;
               }
               break;
@@ -278,17 +280,41 @@ namespace ToddUtils
         }
         else if (options.SoftInterpolation)
         {
+          int step = 0;
           foreach (string line in output)
           {
             string thisline = line;
-            if (thisline.Contains("FEED")) //BRISK is moved to CCI_INIT
+            switch (step)
             {
-              result.Add(thisline);
-              result.Add("CYCLE832(0.2,_ORI_ROUGH,.5)");
-            }
-            else
-            {
-              result.Add($"{thisline}");
+              case 0:
+                if (line.Contains("FEED"))
+                {
+                  result.Add(thisline);
+                  result.Add("CYCLE832(0.2,_ORI_ROUGH,.5)");
+                  step++;
+                }
+                else
+                {
+                  if (!line.Contains("G603"))
+                    result.Add(thisline);
+                }
+                break;
+              case 1:
+                if( line.Contains("G9"))
+                {
+                  if( options.StopOnCut )
+                  {
+                    result.Add(thisline);
+                    result.Add("G4F0.1");
+                    step = 0;
+                  }
+                }
+                else
+                {
+                  if( !line.Contains("G603"))
+                    result.Add(thisline);
+                }
+                break;
             }
           }
         }
@@ -467,6 +493,75 @@ namespace ToddUtils
             }
           }
           result.Add(line);
+        }
+
+        output = result;
+        result = new List<string>();
+        int step = 0;
+        double radialDistLast = 0.0;
+        for(int ii = 0; ii< output.Count; ii++)
+        {
+          string line = output[ii];
+          switch(step)
+          {
+            case 0: //looking for feed
+              if(line.Contains("FEED"))
+              {
+                step++;
+              }
+              result.Add(line);
+              break;
+            case 1: //on part
+              if( (line.Contains("G1") || line.Contains("G9")) && !line.Contains("DIST"))
+              {
+                step++;
+
+                radialDistLast = -1;
+              }
+              result.Add(line);
+              break;
+            case 2: //looking for retract move
+              //if (line.Contains("G1") || line.Contains("G9"))
+              //{
+                
+              //  args = cMotionArguments.getMotionArguments(line);
+              //  double radialDist;
+              //  ToddUtils.LHT.cPose pose = new cPose(args.X, args.Y, args.Z, args.RX, args.RY, args.RZ);
+              //  if (line.Contains("ROTX"))
+              //  {
+              //    ToddUtils.LHT.cTransform rX = new cTransform(0, 0, 0, -args.ROTX, 0, 0);                  
+              //    ToddUtils.LHT.cTransform xPose = rX * pose.getTransform();
+              //    pose = xPose.getPose();
+              //    //Console.WriteLine($"rx: {xPose.rx:F3}");
+              //  }
+
+              //  cTransform surfaceNormal = new cTransform(0, 0, 0, pose.rx, pose.ry, pose.rz);
+              //  cTransform xformed = !surfaceNormal * pose.getTransform();
+              //  radialDist = xformed.z;
+              //  Console.WriteLine($"y: {xformed.y:F1} z:{xformed.z:F1} dist: {radialDist:F1}");
+              //  if( radialDistLast < -1)
+              //  {
+              //    radialDistLast = radialDist;
+              //  }
+              //  else
+              //  {
+              //    if(line.Contains("IF NOT EXIT_PRINT") ) //radialDist - radialDistLast > 25)
+              //    {
+              //      //inject M64
+              //      result.Add("M64 ; (flyout complete)");
+              //      step = 0;
+              //    }
+              //  }                
+              //}
+              if (line.Contains("IF NOT EXIT_PRINT")) //radialDist - radialDistLast > 25)
+              {
+                //inject M64
+                result.Add("M64 ; (flyout complete)");
+                step = 0;
+              }
+              result.Add(line);
+              break;
+          }
         }
         return result;
       }
