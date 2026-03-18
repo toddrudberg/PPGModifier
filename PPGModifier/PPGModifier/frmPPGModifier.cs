@@ -234,8 +234,12 @@ namespace PPGModifier
       string outputFileName = Path.Combine(directory, filenameWithoutExt + "_space.mpf");
       progressBar1.Visible = true;
       List<string> result = ProgramConversions.evenOutBlockSpacing(ofd.FileName, _opts, this.progressBar1);
+
       //output the file
+
       File.WriteAllLines(outputFileName, result);
+      //string outputFIleName2 = outputFileName.Replace("_space", "_s2");
+      //File.WriteAllLines(outputFIleName2, result2);
       label1.Text = $"File output to:";
       linkLabel1.Text = outputFileName;
       linkLabel1.Links.Clear();
