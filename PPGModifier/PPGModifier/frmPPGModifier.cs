@@ -89,6 +89,7 @@ namespace PPGModifier
 
       btnDoTheThingv1_12.Left = (this.ClientSize.Width - btnDoTheThingv1_12.Width) / 2;
       btnUnwidePPG.Left = (this.ClientSize.Width - btnDoTheThingv1_12.Width) / 2;
+      btnEvenBlockSpacing.Left = (this.ClientSize.Width - btnEvenBlockSpacing.Width) / 2;
       progressBar1.Left = (this.ClientSize.Width - progressBar1.Width) / 2;
       progressBar1.Visible = false;
       void AdjustLabels(Label label)
