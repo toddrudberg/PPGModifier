@@ -280,78 +280,6 @@ namespace ToddUtils
         return result;
       }
 
-      List<string> ApplyBlockSpacingRules(List<string> output, ProgramTuningOptions options)
-      {
-
-        if (!options.BlockSpacingApply)
-        {
-          return output;
-        }
-
-        FileParser.cFileParse fp = new cFileParse();
-        List<string> result = new List<string>();
-
-        int state = 0;
-        bool first = true;
-        cMotionArguments lastMotionArgs = new cMotionArguments();
-        for (int ii = 0; ii < output.Count; ii++)
-        {
-          string line = output[ii];
-          cMotionArguments motionArguments = new cMotionArguments();
-          if ( line.Contains("G1") || line.Contains("G9"))
-          {
-            motionArguments = cMotionArguments.getMotionArguments(line);
-            if(first)
-            {
-              lastMotionArgs = motionArguments;
-            }
-            first = false;
-          }
-
-          switch (state)
-          {
-            case 0: //not on part
-              if( line.Contains("FEED"))
-              {
-                state++;
-              }
-              result.Add(line);
-              break;
-
-            case 1: //paying out tow on part
-              {
-
-                if ((line.Contains("G1") || line.Contains("G9")) && line.Contains("DIST="))
-                {
-                  double dx = motionArguments.X - lastMotionArgs.X;
-                  double dy = motionArguments.Y - lastMotionArgs.Y;
-                  double dz = motionArguments.Z - lastMotionArgs.Z;
-                  double du = motionArguments.ROTX - lastMotionArgs.ROTX;
-                  double dist = Math.Sqrt(dx * dx + dy * dy + dz * dz);
-
-                  if ((line.Contains("G9") && options.StopOnCut) || (dist >= options.MinSpacing || du >= options.MinAngleChange))
-                  {
-                    result.Add(line);
-                    lastMotionArgs = motionArguments;
-                  }
-                }
-                else
-                {
-                  result.Add(line);
-                }
-
-                if ((line.Contains("G1") || line.Contains("G9")) && !line.Contains("DIST="))
-                {
-                  state = 0;
-                }
-                break;
-              }
-          }
-        }
-
-        return result;
-      }
-
       List<string> ApplyInterpolationMode(List<string> output, ProgramTuningOptions options)
       {
         FileParser.cFileParse fp = new cFileParse();
@@ -450,85 +378,6 @@ namespace ToddUtils
         else
         {// do nothing
           return output;
-        }
-        return result;
-      }
-
-      List<string> SetOffPartTime(List<string> output, ProgramTuningOptions options)
-      {
-        List<string> result = output;
-
-        if (!options.ManageOffpartTime)
-        {
-          return result;
-        }
-
-        ToddUtils.FileParser.cFileParse fp = new ToddUtils.FileParser.cFileParse();
-        int fCodeLineNumber = -1;
-        int state = 0;
-        cMotionArguments endOfCourseArguments = new cMotionArguments();
-        cMotionArguments startOfNextCourseArguments = new cMotionArguments();
-        for (int ii = 0; ii < output.Count; ii++)
-        {
-          string line = output[ii];
-          switch (state)
-          {
-            case 0:
-              {
-                if (line.Contains("FEED")) //looking for start of course
-                {
-                  state++;
-                }
-                break;
-              }
-            case 1:
-              {
-                if( ((line.Contains("G1") || line.Contains("G9")) && !line.Contains("DIST")) ) //looking for end of course
-                {
-                  //record the end of the course now
-                  endOfCourseArguments = cMotionArguments.getMotionArguments(line);
-                  state++;
-                }
-                break;
-              }
-            case 2:
-              {
-                if( line.Contains("F=")) //look for the offpart feedrate
-                {
-                  fCodeLineNumber = ii; //record it's line number
-                  state++;
-                }
-                break;
-              }
-            case 3:
-              {
-                if(line.Contains("G1") || line.Contains("G9"))
-                {
-                  startOfNextCourseArguments = cMotionArguments.getMotionArguments(line);
-                }
-                if(line.Contains("FEED")) //look for start of next course
-                {
-                  
-                  //calculate offpart distance
-                  double dx = startOfNextCourseArguments.X - endOfCourseArguments.X;
-                  double dy = startOfNextCourseArguments.Y - endOfCourseArguments.Y;
-                  double dz = startOfNextCourseArguments.Z - endOfCourseArguments.Z;
-                  double offPartDist = Math.Sqrt(dx * dx + dy * dy + dz * dz);
-                  //scale offpart speed
-                  double offPartSpeedMax = offPartDist / 0.2; //mm/s.  Denominator is time in seconds
-
-                  //overwrite offpart speed if necessary
-                  if( options.TransitFeedRate > offPartSpeedMax)
-                  {
-                    //fp.ReplaceArgument(line, "F=", offPartSpeedMax * 60, out string newline);
-                    string newline = $"F={offPartSpeedMax * 60:F0} ; ({offPartSpeedMax:F0} mm/s) ";
-                    result[fCodeLineNumber] = newline;
-                  }
-                  state = 1; //you've satisfied state 0, jump into state 1;
-                }
-                break;
-              }
-          }
         }
         return result;
       }
@@ -782,10 +631,8 @@ namespace ToddUtils
       progressBar.Value = 0;
       output = ApplyFeedrate(output, options); progressBar.Value += 10;
       output = ApplyProcessItems(output, options); progressBar.Value += 10;
-      output = ApplyBlockSpacingRules(output, options); progressBar.Value += 10;
       output = ApplyInterpolationMode(output, options); progressBar.Value += 10;
       output = ApplyUVParameters(output, options); progressBar.Value += 10;
-      output = SetOffPartTime(output, options); progressBar.Value += 10;
       output = InsertM61(output, options); progressBar.Value += 10;
       output = RenumberPartProgram(output); progressBar.Value += 10;
       List<string> summary = CollectStats(output); progressBar.Value += 10;
