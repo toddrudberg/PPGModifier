@@ -277,7 +277,7 @@ namespace ToddUtils
           if (!AppliedTackLengthParemter && line.Contains("G54"))
           {
             thisline = line;
-            result.Add($"TACK_DISTANCE_FOR_UV_AND_COMPACTION={options.tackSettingsDistance:F3} ; How far along course do we apply UV and compaction settings for tack");
+            result.Add($"TACK_DIST={options.tackSettingsDistance:F3} ; How far along course do we apply UV and compaction settings for tack");
             AppliedTackLengthParemter = true;
           }
 
@@ -578,8 +578,8 @@ namespace ToddUtils
           if( !appliedUVLaserSettings && line.Contains("G54"))
           {
             result.Add($";UV LASER SETTINGS:");
-            result.Add($"UV_LASER_DOSE_TACK={options.UVLaserTackDose:F1} ; J/cm²");
-            result.Add($"UV_LASER_DOSE_COURSE={options.UVLaserCouseDose:F1} ; J/cm²");
+            result.Add($"LASER_DOSE_TACK={options.UVLaserTackDose:F1} ; J/cm²");
+            result.Add($"LASER_DOSE_COURSE={options.UVLaserCouseDose:F1} ; J/cm²");
             appliedUVLaserSettings = true;
           }
           result.Add(line);
@@ -602,10 +602,10 @@ namespace ToddUtils
           if (!appliedSmoothAccelerationParameters && line.Contains("G54"))
           {
             result.Add($";SMOOTH ACCELERATION PARAMETERS:");
-            result.Add($"ACCELERATION_BOX_FILTER={options.AccelerationBoxFilter:F1} ; s");
-            result.Add($"ACCELERATION_COURSE_ACCELERATION={options.AccelerationCourseAcceleration:F1} ; g");
-            result.Add($"ACCELERATION_TACK_SPEED={options.AccelerationTackSpeed:F0} ; mm/s");
-            result.Add($"ACCELERATION_FEED_DISTANCE={options.AccelerationFeedDistance:F1} ; mm");
+            result.Add($"ACC_BOX_FILTER={options.AccelerationBoxFilter:F1} ; s");
+            result.Add($"ACC_COURSE={options.AccelerationCourseAcceleration:F1} ; g");
+            result.Add($"ACC_TACK_SPEED={options.AccelerationTackSpeed:F0} ; mm/s");
+            result.Add($"ACC_FEED_DIST={options.AccelerationFeedDistance:F1} ; mm");
             appliedSmoothAccelerationParameters = true;
           }
           result.Add(line);
