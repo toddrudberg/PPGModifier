@@ -319,6 +319,7 @@ namespace ToddUtils
                 else if( line.Contains("G9"))
                 {
                   result.Add("SOFT ; (soften the cut accel and offpart move)");
+                  
                   step++;
                 }
                 
@@ -409,10 +410,21 @@ namespace ToddUtils
             N25 TACK_UV_MAP_TRAILING(0,0,1,5000,5,5001,42,30012)
         */
 
+        bool getReadyforCut = false;
         for (int ii = 0; ii < output.Count; ii++)
         {
           string line = output[ii];
           string newline = line;
+          if( line.Contains("FEED"))
+          {
+            getReadyforCut = true;
+          }
+          if(getReadyforCut && line.Contains("G9"))
+          {
+            result.Add(line);
+            newline = $"UVMULT={options.UVMult / 100.0:F3}"; //turning it off for a test.  Does the UV laser tack it down good enough?  
+            getReadyforCut=false;
+          }
           if( line.Contains(" UV_MAP_LEADING("))
           {
             newline = CalculateUVParameters("UV_MAP_LEADING", options.UVCourseSlopeLeading, options.UVCourseOffsetLeading);
