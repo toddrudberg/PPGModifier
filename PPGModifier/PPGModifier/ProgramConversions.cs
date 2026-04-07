@@ -252,6 +252,7 @@ namespace ToddUtils
           return output;
         }
 
+        bool AppliedTackLengthParemter = false;
 
         foreach (string line in output)
         {
@@ -273,6 +274,12 @@ namespace ToddUtils
             thisline = $"N{(int)Nnum} NOZZLE_TEMP_SET({options.nozzleTemp:F3})";
           }
 
+          if (!AppliedTackLengthParemter && line.Contains("G54"))
+          {
+            thisline = line;
+            result.Add($"TACK_DISTANCE_FOR_UV_AND_COMPACTION={options.tackSettingsDistance:F3} ; How far along course do we apply UV and compaction settings for tack");
+            AppliedTackLengthParemter = true;
+          }
 
           result.Add(thisline);
         }
@@ -556,6 +563,56 @@ namespace ToddUtils
         return result;
       }
 
+      List<string> ApplyUVLaserSettings(List<string> output, ProgramTuningOptions options)
+      {
+        if(!options.UseUVLaser)
+        {
+          return output;
+        }
+
+        List<string> result = new List<string>();
+        bool appliedUVLaserSettings = false;
+        for (int ii = 0; ii < output.Count; ii++)
+        {
+          string line = output[ii];
+          if( !appliedUVLaserSettings && line.Contains("G54"))
+          {
+            result.Add($";UV LASER SETTINGS:");
+            result.Add($"UV_LASER_DOSE_TACK={options.UVLaserTackDose:F1} ; J/cm²");
+            result.Add($"UV_LASER_DOSE_COURSE={options.UVLaserCouseDose:F1} ; J/cm²");
+            appliedUVLaserSettings = true;
+          }
+          result.Add(line);
+        }
+        return result;
+      }
+
+      List<string> ApplySmoothAccelerationParameters(List<string> output, ProgramTuningOptions options)
+      {
+        if (!options.UseSmoothAccelerationSettings)
+        {
+          return output;
+        }
+
+        List<string> result = new List<string>();
+        bool appliedSmoothAccelerationParameters = false;
+        for (int ii = 0; ii < output.Count; ii++)
+        {
+          string line = output[ii];
+          if (!appliedSmoothAccelerationParameters && line.Contains("G54"))
+          {
+            result.Add($";SMOOTH ACCELERATION PARAMETERS:");
+            result.Add($"ACCELERATION_BOX_FILTER={options.AccelerationBoxFilter:F1} ; s");
+            result.Add($"ACCELERATION_COURSE_ACCELERATION={options.AccelerationCourseAcceleration:F1} ; g");
+            result.Add($"ACCELERATION_TACK_SPEED={options.AccelerationTackSpeed:F0} ; mm/s");
+            result.Add($"ACCELERATION_FEED_DISTANCE={options.AccelerationFeedDistance:F1} ; mm");
+            appliedSmoothAccelerationParameters = true;
+          }
+          result.Add(line);
+        }
+        return result;
+      }
+
       List<string> RenumberPartProgram(List<string> output)
       {
         int nNum = 1;
@@ -646,6 +703,9 @@ namespace ToddUtils
       output = ApplyInterpolationMode(output, options); progressBar.Value += 10;
       output = ApplyUVParameters(output, options); progressBar.Value += 10;
       output = InsertM61(output, options); progressBar.Value += 10;
+      output = ApplyUVLaserSettings(output, options);
+      output = ApplySmoothAccelerationParameters(output, options);
+      //finished adding lines, now renumber the part program
       output = RenumberPartProgram(output); progressBar.Value += 10;
       List<string> summary = CollectStats(output); progressBar.Value += 10;
 

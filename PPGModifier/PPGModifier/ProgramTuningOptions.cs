@@ -125,12 +125,12 @@ public sealed class ProgramTuningOptions
   [Category(categoryUVLaserSettings), DisplayName("2 - UV Tack Dose mJ/cm²")]
   [Description("Default: 100.0")]
   [DefaultValue(12.5)]
-  public double UVTackDose { get; set; } = 12.5d;
+  public double UVLaserTackDose { get; set; } = 12.5d;
 
   [Category(categoryUVLaserSettings), DisplayName("3 - UV Course Dose mJ/cm²")]
   [DefaultValue(67.5)]
   [Description("Default: 67.5")]
-  public double UVCouseDose { get; set; } = 67.5d;
+  public double UVLaserCouseDose { get; set; } = 67.5d;
   #endregion
 
   #region Acceleration Settings
@@ -138,7 +138,7 @@ public sealed class ProgramTuningOptions
   [Category(categoryAccelerationSettings), DisplayName("1 - Override Acceleration Settings?")]
   [Description("Do you want to overide the stock Acceleration Settings?")]
   [DefaultValue(false)]
-  public bool UseAccelerationSettings { get; set; } = false;
+  public bool UseSmoothAccelerationSettings { get; set; } = false;
 
   [Category(categoryAccelerationSettings), DisplayName("2 - Box Filter [s]")]
   [Description("Default: .25s - 1s.  Adds double box filter smoothing during jump from tack speed to course speed.")]
