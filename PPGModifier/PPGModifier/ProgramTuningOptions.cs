@@ -4,45 +4,27 @@ using System.Text.Json.Serialization;
 
 public sealed class ProgramTuningOptions
 {
-  [Category("Formatting"), DisplayName("Number Format"), Description("Standard numeric format string, e.g. F6, G5, 0.000")]
-  [DefaultValue("F6")]
-  public string NumberFormat { get; set; } = "F6";
-
-  #region Block Spacing
-
-  [Category("Block Spacing"), DisplayName("Apply Block Spacing"), Description("Do you want to adjust block spacing?")]
-  [DefaultValue(false)]
-  public bool BlockSpacingApply { get; set; } = false;
-
-  [Category("Block Spacing"), DisplayName("Min Spacing (mm)"), Description("Minimum distance to print a line")]
-  [DefaultValue(10.0)]
-  public double MinSpacing { get; set; } = 10.0;
-
-  [Category("Block Spacing"), DisplayName("Min Angle Change (deg)"), Description("Minimum angle change to print a line")]
-  [DefaultValue(10.0)]
-  public double MinAngleChange { get; set; } = 10.0;
-  #endregion
 
   #region Feed Rates
   [Category("Feed Rates"), DisplayName("1 - Use Override Feed Rates")]
   [DefaultValue(true)]
   public bool UseOverrideFeedRates { get; set; } = false;
 
-  [Category("Feed Rates"), DisplayName("3 - On Course FR (mm/s)"), Description("General on course speed (500 mm/s max).")]
-  [DefaultValue(500)]
-  public double OnCourseFeedRate { get; set; } = 400;
-
   [Category("Feed Rates"), DisplayName("2 - On Course FR First Layer (mm/s)"), Description("First Layer on course speed (500 mm/s max).")]
-  [DefaultValue(200)]
-  public double OnCourseFeedRateFirstLayer { get; set; } = 200;
+  [DefaultValue(200.0)]
+  public double OnCourseFeedRateFirstLayer { get; set; } = 200d;
+
+  [Category("Feed Rates"), DisplayName("3 - On Course FR (mm/s)"), Description("General on course speed (500 mm/s max).")]
+  [DefaultValue(400.0)]
+  public double OnCourseFeedRate { get; set; } = 400d;
 
   [Category("Feed Rates"), DisplayName("4 - Exit Feedrate (mm/s)"), Description("Exit FeedRate (500 mm/s max, 50 default).  From the end of cut to end of part.  Especially effective during stop on cut.  A slower speed straightens the tails and allows more UV cure which holds the ends down and makes subsquent layers easier to print.")]
-  [DefaultValue(50)]
-  public double ExitFeedRate { get; set; } = 50;
+  [DefaultValue(75.0)]
+  public double ExitFeedRate { get; set; } = 75d;
 
   [Category("Feed Rates"), DisplayName("5 - Transit Feedrate (mm/s)"), Description("Rapid traverse speed (1500 mm/s max).")]
-  [DefaultValue(1500)]
-  public double TransitFeedRate { get; set; } = 1500;
+  [DefaultValue(1500.0)]
+  public double TransitFeedRate { get; set; } = 1500d;
 
   #endregion
 
@@ -60,8 +42,12 @@ public sealed class ProgramTuningOptions
   public double CourseCompactionForce { get; set; } = 2.5;
 
   [Category("Process Items"), DisplayName("3 - Nozzle Temp (deg C)"), Description("60 for Ceremat, 70 for Aero.")]
-  [DefaultValue(70)]
-  public double nozzleTemp { get; set; } = 70.0;
+  [DefaultValue(60.0)]
+  public double nozzleTemp { get; set; } = 60.0;
+
+  [Category("Process Items"), DisplayName("4 - tack distance [mm]"), Description("How long do you want to apply tack UV and tack compaction (10mm-50mm)?")]
+  [DefaultValue(15.0)]
+  public double tackSettingsDistance{ get; set; } = 15.0;
   #endregion
 
   #region Interpolation Items
@@ -76,25 +62,23 @@ public sealed class ProgramTuningOptions
   #endregion
 
   #region Logic
-  [Category("Logic"), DisplayName("Stop on Cut"), Description("Required for all non-cut-on-the-fly machines.  Currently only Mercury will get this upgrade.")]
-  [DefaultValue(false)]
-  public bool StopOnCut { get; set; } = false;
-
-  [Category("Logic"), DisplayName("Insert M61"), Description("Soon this will be required on all machins.  As of this writing on only 1506 needs M61.")]
-  [DefaultValue(false)]
-  public bool InsertM61 { get; set; } = false;
-
-  [Category("Logic"), DisplayName("ManageOffPartTime"), Description("Required on all machines except 1506.  M61 handles this in the future.  Before M61, I was required to manage the time from the end of a course to the start of a next.  If the time falls below a threashold, I calculate the maximum speed required to ensure this threashold is met and overwrite the programmed off-part feedrate.")]
+  [Category("Logic"), DisplayName("Insert M61/M64?"), Description("1 - Soon this will be required on all machines - check ppg to see if it already has them.")]
   [DefaultValue(true)]
-  public bool ManageOffpartTime { get; set; } = false;
+  public bool InsertM61 { get; set; } = true;
+
+  [Category("Logic"), DisplayName("Stop on Cut"), Description("2 - Required for all non-cut-on-the-fly machines.  Currently only Mercury will get this upgrade.")]
+  [DefaultValue(true)]
+  public bool StopOnCut { get; set; } = true;
   #endregion
 
   #region UV Control
   [Category("UV Control"), DisplayName("1 - Override UV Parameters")]
+  [Description("You need to override the table to extend speeds to 125mm/s - just do it.")]
   [DefaultValue(true)]
   public bool OverrideUVParameters { get; set; } = true;
 
-  [Category("UV Control"), DisplayName("2 - UVMULT"), Description("Scaler for the UV process")]
+  [Category("UV Control"), DisplayName("2 - UVMULT")] 
+  [Description("AERO use 0.10, CEREMAT and others 1.0")]
   [DefaultValue(1.0)]
   public double UVMult { get; set; } = 1.0;
 
@@ -104,29 +88,78 @@ public sealed class ProgramTuningOptions
   public double UVTackOffset { get; set; } = 5000d;
 
   [Category("UV Control"), DisplayName("4 - Tack slope")]
-  [DefaultValue(675.0)]
   [Description("Default: 675")]
+  [DefaultValue(675.0)]
   public double UVTackSlope { get; set; } = 675d;
 
   [Category("UV Control"), DisplayName("5 - Course offset leading")]
-  [DefaultValue(1300.0)]
   [Description("Default: 1300")]
+  [DefaultValue(1300.0)]
   public double UVCourseOffsetLeading { get; set; } = 1300d;
 
   [Category("UV Control"), DisplayName("6 - Course slope leading")]
-  [DefaultValue(100.0)]
   [Description("Default: 100")]
+  [DefaultValue(100.0)]
   public double UVCourseSlopeLeading { get; set; } = 100d;
 
   [Category("UV Control"), DisplayName("7 - Course offset trailing")]
-  [DefaultValue(1300.0)]
   [Description("Default: 1300")]
+  [DefaultValue(1300.0)]
   public double UVCourseOffsetTrailing { get; set; } = 1300d;
 
   [Category("UV Control"), DisplayName("8 - Course slope trailing")]
-  [DefaultValue(175.0)]
   [Description("Default: 175")]
+  [DefaultValue(175.0)]
   public double UVCourseSlopeTrailing { get; set; } = 175d;
+  #endregion
+
+  #region UVLaserSettings
+
+  const string categoryUVLaserSettings = "UV Laser Control";
+
+  [Category(categoryUVLaserSettings), DisplayName("1 - Use UV Laser?")]
+  [Description("Does this machine have a UV Laser?")]
+  [DefaultValue(false)]
+  public bool UseUVLaser { get; set; } = false;
+
+  [Category(categoryUVLaserSettings), DisplayName("2 - UV Tack Dose mJ/cm²")]
+  [Description("Default: 100.0")]
+  [DefaultValue(12.5)]
+  public double UVTackDose { get; set; } = 12.5d;
+
+  [Category(categoryUVLaserSettings), DisplayName("3 - UV Course Dose mJ/cm²")]
+  [DefaultValue(67.5)]
+  [Description("Default: 67.5")]
+  public double UVCouseDose { get; set; } = 67.5d;
+  #endregion
+
+  #region Acceleration Settings
+  const string categoryAccelerationSettings = "Acceleration Settings";
+  [Category(categoryAccelerationSettings), DisplayName("1 - Override Acceleration Settings?")]
+  [Description("Do you want to overide the stock Acceleration Settings?")]
+  [DefaultValue(false)]
+  public bool UseAccelerationSettings { get; set; } = false;
+
+  [Category(categoryAccelerationSettings), DisplayName("2 - Box Filter [s]")]
+  [Description("Default: .25s - 1s.  Adds double box filter smoothing during jump from tack speed to course speed.")]
+  [DefaultValue(0.5)]
+  public double AccelerationBoxFilter { get; set; } = 0.5d;
+
+  [Category(categoryAccelerationSettings), DisplayName("3 - tack to course speed acceleration [g]")]
+  [Description("Default: .1g - .5g  desired peak acceleration during ramp from tack speed to course speed.")]
+  [DefaultValue(0.25)]
+  public double AccelerationCourseAcceleration { get; set; } = 0.25d;
+
+  [Category(categoryAccelerationSettings), DisplayName("4 - feed feedrate [mm/s]")]
+  [Description("Default: 10mm/s - 50mm/s initial feed speed (tack speed).")]
+  [DefaultValue(15.0)]
+  public double AccelerationTackSpeed { get; set; } = 15.0;
+
+  [Category(categoryAccelerationSettings), DisplayName("5 - tack feed distance [mm]")]
+  [Description("Default: 15mm - 30mm.  Distance at tack speed.")]
+  [DefaultValue(15.0)]
+  public double AccelerationFeedDistance { get; set; } = 15.0;
+
   #endregion
 
   // JSON persistence

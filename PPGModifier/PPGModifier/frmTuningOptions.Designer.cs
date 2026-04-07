@@ -36,19 +36,19 @@
       // 
       // propertyGrid1
       // 
-      propertyGrid1.Location = new Point(5, 10);
-      propertyGrid1.Margin = new Padding(1);
+      propertyGrid1.Location = new Point(12, 27);
+      propertyGrid1.Margin = new Padding(2, 3, 2, 3);
       propertyGrid1.Name = "propertyGrid1";
-      propertyGrid1.Size = new Size(803, 580);
+      propertyGrid1.Size = new Size(1950, 1585);
       propertyGrid1.TabIndex = 0;
       // 
       // btnOK
       // 
       btnOK.DialogResult = DialogResult.OK;
-      btnOK.Location = new Point(258, 623);
-      btnOK.Margin = new Padding(1);
+      btnOK.Location = new Point(107, 1618);
+      btnOK.Margin = new Padding(2, 3, 2, 3);
       btnOK.Name = "btnOK";
-      btnOK.Size = new Size(77, 21);
+      btnOK.Size = new Size(187, 57);
       btnOK.TabIndex = 1;
       btnOK.Text = "OK";
       btnOK.UseVisualStyleBackColor = true;
@@ -57,10 +57,10 @@
       // btnCancel
       // 
       btnCancel.DialogResult = DialogResult.Cancel;
-      btnCancel.Location = new Point(337, 623);
-      btnCancel.Margin = new Padding(1);
+      btnCancel.Location = new Point(298, 1618);
+      btnCancel.Margin = new Padding(2, 3, 2, 3);
       btnCancel.Name = "btnCancel";
-      btnCancel.Size = new Size(77, 21);
+      btnCancel.Size = new Size(187, 57);
       btnCancel.TabIndex = 2;
       btnCancel.Text = "Cancel";
       btnCancel.UseVisualStyleBackColor = true;
@@ -69,10 +69,10 @@
       // btnReset
       // 
       btnReset.DialogResult = DialogResult.Cancel;
-      btnReset.Location = new Point(416, 623);
-      btnReset.Margin = new Padding(1);
+      btnReset.Location = new Point(489, 1618);
+      btnReset.Margin = new Padding(2, 3, 2, 3);
       btnReset.Name = "btnReset";
-      btnReset.Size = new Size(131, 21);
+      btnReset.Size = new Size(318, 57);
       btnReset.TabIndex = 3;
       btnReset.Text = "Reset to Defaults";
       btnReset.UseVisualStyleBackColor = true;
@@ -80,14 +80,15 @@
       // 
       // TuningDialog
       // 
-      AutoScaleDimensions = new SizeF(7F, 15F);
+      AutoScaleDimensions = new SizeF(17F, 41F);
       AutoScaleMode = AutoScaleMode.Font;
-      ClientSize = new Size(827, 654);
+      AutoScroll = true;
+      ClientSize = new Size(2008, 1760);
       Controls.Add(btnReset);
       Controls.Add(btnCancel);
       Controls.Add(btnOK);
       Controls.Add(propertyGrid1);
-      Margin = new Padding(1);
+      Margin = new Padding(2, 3, 2, 3);
       Name = "TuningDialog";
       Text = "Tuning Options";
       Load += TuningDialog_Load;
