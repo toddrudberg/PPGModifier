@@ -88,6 +88,8 @@ namespace PPGModifier
       base.OnResize(e);
 
       btnDoTheThingv1_12.Left = (this.ClientSize.Width - btnDoTheThingv1_12.Width) / 2;
+      btnUnwidePPG.Left = (this.ClientSize.Width - btnDoTheThingv1_12.Width) / 2;
+      btnEvenBlockSpacing.Left = (this.ClientSize.Width - btnEvenBlockSpacing.Width) / 2;
       progressBar1.Left = (this.ClientSize.Width - progressBar1.Width) / 2;
       progressBar1.Visible = false;
       void AdjustLabels(Label label)
@@ -195,6 +197,54 @@ namespace PPGModifier
       this.Enabled = true;
     }
 
+    private void btnUnwidePPG_Click(object sender, EventArgs e)
+    {
+      using var ofd = new OpenFileDialog();
+      ofd.Filter = "GCode files (*.mpf)|*.mpf|All files (*.*)|*.*";
+      ofd.Title = "Select GCode File";
 
+      if (ofd.ShowDialog(this) != DialogResult.OK)
+      {
+        MessageBox.Show("No file selected.");
+        this.Enabled = true;
+        return;
+      }
+
+      string directory = Path.GetDirectoryName(ofd.FileName);
+      string filenameWithoutExt = Path.GetFileNameWithoutExtension(ofd.FileName);
+      string outputFileName = Path.Combine(directory, filenameWithoutExt + "_bs.mpf");
+      progressBar1.Visible = true;
+      ProgramConversions.unwindPPG(ofd.FileName, outputFileName, _opts, this.progressBar1);
+    }
+
+    private void btnEvenBlockSpacing_Click(object sender, EventArgs e)
+    {
+      using var ofd = new OpenFileDialog();
+      ofd.Filter = "GCode files (*.mpf)|*.mpf|All files (*.*)|*.*";
+      ofd.Title = "Select GCode File";
+
+      if (ofd.ShowDialog(this) != DialogResult.OK)
+      {
+        MessageBox.Show("No file selected.");
+        this.Enabled = true;
+        return;
+      }
+
+      string directory = Path.GetDirectoryName(ofd.FileName);
+      string filenameWithoutExt = Path.GetFileNameWithoutExtension(ofd.FileName);
+      string outputFileName = Path.Combine(directory, filenameWithoutExt + "_space.mpf");
+      progressBar1.Visible = true;
+      List<string> result = ProgramConversions.evenOutBlockSpacing(ofd.FileName, _opts, this.progressBar1);
+
+      //output the file
+
+      File.WriteAllLines(outputFileName, result);
+      //string outputFIleName2 = outputFileName.Replace("_space", "_s2");
+      //File.WriteAllLines(outputFIleName2, result2);
+      label1.Text = $"File output to:";
+      linkLabel1.Text = outputFileName;
+      linkLabel1.Links.Clear();
+      linkLabel1.Links.Add(0, linkLabel1.Text.Length, outputFileName);
+    }
   }
 }

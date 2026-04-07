@@ -33,6 +33,8 @@
       progressBar1 = new ProgressBar();
       label1 = new Label();
       linkLabel1 = new LinkLabel();
+      btnUnwidePPG = new Button();
+      btnEvenBlockSpacing = new Button();
       SuspendLayout();
       // 
       // btnDoTheThingv1_12
@@ -71,6 +73,28 @@
       linkLabel1.Text = "linkLabel1";
       linkLabel1.MouseUp += linkLabel1_MouseUp;
       // 
+      // btnUnwidePPG
+      // 
+      btnUnwidePPG.Location = new Point(176, 150);
+      btnUnwidePPG.Margin = new Padding(1);
+      btnUnwidePPG.Name = "btnUnwidePPG";
+      btnUnwidePPG.Size = new Size(331, 41);
+      btnUnwidePPG.TabIndex = 8;
+      btnUnwidePPG.Text = "Unwind Program";
+      btnUnwidePPG.UseVisualStyleBackColor = true;
+      btnUnwidePPG.Click += btnUnwidePPG_Click;
+      // 
+      // btnEvenBlockSpacing
+      // 
+      btnEvenBlockSpacing.Location = new Point(176, 193);
+      btnEvenBlockSpacing.Margin = new Padding(1);
+      btnEvenBlockSpacing.Name = "btnEvenBlockSpacing";
+      btnEvenBlockSpacing.Size = new Size(331, 41);
+      btnEvenBlockSpacing.TabIndex = 9;
+      btnEvenBlockSpacing.Text = "Even Block Spacing";
+      btnEvenBlockSpacing.UseVisualStyleBackColor = true;
+      btnEvenBlockSpacing.Click += btnEvenBlockSpacing_Click;
+      // 
       // frmPPGModifier
       // 
       AutoScaleDimensions = new SizeF(7F, 15F);
@@ -78,6 +102,8 @@
       BackgroundImage = (Image)resources.GetObject("$this.BackgroundImage");
       BackgroundImageLayout = ImageLayout.Stretch;
       ClientSize = new Size(705, 546);
+      Controls.Add(btnEvenBlockSpacing);
+      Controls.Add(btnUnwidePPG);
       Controls.Add(linkLabel1);
       Controls.Add(label1);
       Controls.Add(progressBar1);
@@ -96,5 +122,7 @@
     private ProgressBar progressBar1;
     private Label label1;
     private LinkLabel linkLabel1;
+    private Button btnUnwidePPG;
+    private Button btnEvenBlockSpacing;
   }
 }

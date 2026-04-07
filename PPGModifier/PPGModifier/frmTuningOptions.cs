@@ -79,7 +79,21 @@ namespace PPGModifier
 
     private void TuningDialog_Load(object sender, EventArgs e)
     {
+      
+
       this.StartPosition = FormStartPosition.CenterParent;
+
+      var wa = Screen.FromControl(this).WorkingArea;
+
+      int margin = 5;
+
+      // Clamp size
+      this.Width =  wa.Width / 2 - margin * 2;
+      this.Height = wa.Height - margin * 2;
+
+      // Re-center after resizing
+      this.Left = wa.Left + margin;
+      this.Top = wa.Top + (wa.Height - this.Height) / 2;
     }
 
   }

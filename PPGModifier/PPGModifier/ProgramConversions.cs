@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
 using System.Resources;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -18,6 +20,133 @@ namespace ToddUtils
 {
   public class ProgramConversions
   {
+
+    //internal static List<string> evenOutBlockSpacingSafe(string fileName, ProgramTuningOptions opts, ProgressBar progressBar1)
+    //{
+    //  List<string> input = File.ReadAllLines(fileName).ToList();
+    //  List<string> result = new List<string>(input.Count);
+
+    //  bool onPart = false;
+    //  int courseNum = 0;
+    //  cMotionArguments? lastArgs = null;
+
+    //  bool IsMotionLine(string line)
+    //  {
+    //    return line.Contains("G1") || line.Contains("G9");
+    //  }
+
+    //  bool HasDist(string line)
+    //  {
+    //    return line.Contains("DIST=");
+    //  }
+
+    //  bool IsSafeToInsert(cMotionArguments a, cMotionArguments b)
+    //  {
+    //    double dDist = b.DIST - a.DIST;
+    //    double dRx = Math.Abs(b.RX - a.RX);
+    //    double dRy = Math.Abs(b.RY - a.RY);
+    //    double dRz = Math.Abs(b.RZ - a.RZ);
+    //    double dRotx = Math.Abs(b.ROTX - a.ROTX);
+
+    //    // Conservative rule:
+    //    // only densify if the DIST gap is meaningfully large
+    //    // and the attitude change is small enough that straight interpolation is believable.
+    //    return dDist > 1.1 &&
+    //           dRx < 2.0 &&
+    //           dRy < 2.0 &&
+    //           dRz < 2.0 &&
+    //           dRotx < 2.0;
+    //  }
+
+    //  void InsertLines(cMotionArguments lastPoint, cMotionArguments thisPoint, List<string> target)
+    //  {
+    //    double dx = thisPoint.X - lastPoint.X;
+    //    double dy = thisPoint.Y - lastPoint.Y;
+    //    double dz = thisPoint.Z - lastPoint.Z;
+    //    double dRotx = thisPoint.ROTX - lastPoint.ROTX;
+    //    double dRx = thisPoint.RX - lastPoint.RX;
+    //    double dRy = thisPoint.RY - lastPoint.RY;
+    //    double dRz = thisPoint.RZ - lastPoint.RZ;
+    //    double dDist = thisPoint.DIST - lastPoint.DIST;
+
+    //    // Aim for roughly 1.0 DIST spacing without creating an extra point
+    //    // when the gap is only slightly over 1.0.
+    //    int numInserts = Math.Max(0, (int)Math.Floor(dDist) - 1);
+
+    //    for (int i = 1; i <= numInserts; i++)
+    //    {
+    //      double ratio = (double)i / (numInserts + 1);
+
+    //      cMotionArguments newArgs = new cMotionArguments
+    //      {
+    //        X = lastPoint.X + ratio * dx,
+    //        Y = lastPoint.Y + ratio * dy,
+    //        Z = lastPoint.Z + ratio * dz,
+    //        ROTX = lastPoint.ROTX + ratio * dRotx,
+    //        RX = lastPoint.RX + ratio * dRx,
+    //        RY = lastPoint.RY + ratio * dRy,
+    //        RZ = lastPoint.RZ + ratio * dRz,
+    //        DIST = lastPoint.DIST + ratio * dDist
+    //      };
+
+    //      target.Add(
+    //        $"G1 X={newArgs.X:F5} Y={newArgs.Y:F5} Z={newArgs.Z:F5} " +
+    //        $"RX={newArgs.RX:F5} RY={newArgs.RY:F5} RZ={newArgs.RZ:F5} " +
+    //        $"ROTX=DC({newArgs.ROTX:F5}) DIST={newArgs.DIST:F3} ; ");
+    //    }
+    //  }
+
+    //  for (int i = 0; i < input.Count; i++)
+    //  {
+    //    progressBar1.Value = 100 * i / input.Count;
+    //    string line = input[i];
+
+    //    // Default behavior: preserve every line unless we intentionally insert before it.
+    //    if (!IsMotionLine(line))
+    //    {
+    //      // Break interpolation continuity across non-motion lines.
+    //      onPart = false;
+    //      lastArgs = null;
+    //      result.Add(line);
+    //      continue;
+    //    }
+
+    //    if (!HasDist(line))
+    //    {
+    //      // Motion line, but not one of the on-part DIST blocks.
+    //      // Treat as a hard boundary to avoid interpolating across feed/dwell/modal changes.
+    //      onPart = false;
+    //      lastArgs = null;
+    //      result.Add(line);
+    //      continue;
+    //    }
+
+    //    cMotionArguments currentArgs = cMotionArguments.getMotionArguments(line);
+
+    //    if (!onPart || lastArgs == null)
+    //    {
+    //      // Start of a new contiguous on-part motion run.
+    //      onPart = true;
+    //      courseNum++;
+    //      lastArgs = currentArgs;
+    //      result.Add(line);
+    //      continue;
+    //    }
+
+    //    if (IsSafeToInsert(lastArgs, currentArgs))
+    //    {
+    //      InsertLines(lastArgs, currentArgs, result);
+    //    }
+
+    //    result.Add(line);
+    //    lastArgs = currentArgs;
+    //  }
+
+    //  progressBar1.Value = 100;
+    //  return result;
+    //}
+
+
     internal static void updateProgram(string filename, string outputFilename, ProgramTuningOptions options, ProgressBar progressBar)
     {
       string numberFormat = "F6";
@@ -151,78 +280,6 @@ namespace ToddUtils
         return result;
       }
 
-      List<string> ApplyBlockSpacingRules(List<string> output, ProgramTuningOptions options)
-      {
-
-        if (!options.BlockSpacingApply)
-        {
-          return output;
-        }
-
-        FileParser.cFileParse fp = new cFileParse();
-        List<string> result = new List<string>();
-
-        int state = 0;
-        bool first = true;
-        cMotionArguments lastMotionArgs = new cMotionArguments();
-        for (int ii = 0; ii < output.Count; ii++)
-        {
-          string line = output[ii];
-          cMotionArguments motionArguments = new cMotionArguments();
-          if ( line.Contains("G1") || line.Contains("G9"))
-          {
-            motionArguments = cMotionArguments.getMotionArguments(line);
-            if(first)
-            {
-              lastMotionArgs = motionArguments;
-            }
-            first = false;
-          }
-
-          switch (state)
-          {
-            case 0: //not on part
-              if( line.Contains("FEED"))
-              {
-                state++;
-              }
-              result.Add(line);
-              break;
-
-            case 1: //paying out tow on part
-              {
-
-                if ((line.Contains("G1") || line.Contains("G9")) && line.Contains("DIST="))
-                {
-                  double dx = motionArguments.X - lastMotionArgs.X;
-                  double dy = motionArguments.Y - lastMotionArgs.Y;
-                  double dz = motionArguments.Z - lastMotionArgs.Z;
-                  double du = motionArguments.ROTX - lastMotionArgs.ROTX;
-                  double dist = Math.Sqrt(dx * dx + dy * dy + dz * dz);
-
-                  if ((line.Contains("G9") && options.StopOnCut) || (dist >= options.MinSpacing || du >= options.MinAngleChange))
-                  {
-                    result.Add(line);
-                    lastMotionArgs = motionArguments;
-                  }
-                }
-                else
-                {
-                  result.Add(line);
-                }
-
-                if ((line.Contains("G1") || line.Contains("G9")) && !line.Contains("DIST="))
-                {
-                  state = 0;
-                }
-                break;
-              }
-          }
-        }
-
-        return result;
-      }
-
       List<string> ApplyInterpolationMode(List<string> output, ProgramTuningOptions options)
       {
         FileParser.cFileParse fp = new cFileParse();
@@ -321,85 +378,6 @@ namespace ToddUtils
         else
         {// do nothing
           return output;
-        }
-        return result;
-      }
-
-      List<string> SetOffPartTime(List<string> output, ProgramTuningOptions options)
-      {
-        List<string> result = output;
-
-        if (!options.ManageOffpartTime)
-        {
-          return result;
-        }
-
-        ToddUtils.FileParser.cFileParse fp = new ToddUtils.FileParser.cFileParse();
-        int fCodeLineNumber = -1;
-        int state = 0;
-        cMotionArguments endOfCourseArguments = new cMotionArguments();
-        cMotionArguments startOfNextCourseArguments = new cMotionArguments();
-        for (int ii = 0; ii < output.Count; ii++)
-        {
-          string line = output[ii];
-          switch (state)
-          {
-            case 0:
-              {
-                if (line.Contains("FEED")) //looking for start of course
-                {
-                  state++;
-                }
-                break;
-              }
-            case 1:
-              {
-                if( ((line.Contains("G1") || line.Contains("G9")) && !line.Contains("DIST")) ) //looking for end of course
-                {
-                  //record the end of the course now
-                  endOfCourseArguments = cMotionArguments.getMotionArguments(line);
-                  state++;
-                }
-                break;
-              }
-            case 2:
-              {
-                if( line.Contains("F=")) //look for the offpart feedrate
-                {
-                  fCodeLineNumber = ii; //record it's line number
-                  state++;
-                }
-                break;
-              }
-            case 3:
-              {
-                if(line.Contains("G1") || line.Contains("G9"))
-                {
-                  startOfNextCourseArguments = cMotionArguments.getMotionArguments(line);
-                }
-                if(line.Contains("FEED")) //look for start of next course
-                {
-                  
-                  //calculate offpart distance
-                  double dx = startOfNextCourseArguments.X - endOfCourseArguments.X;
-                  double dy = startOfNextCourseArguments.Y - endOfCourseArguments.Y;
-                  double dz = startOfNextCourseArguments.Z - endOfCourseArguments.Z;
-                  double offPartDist = Math.Sqrt(dx * dx + dy * dy + dz * dz);
-                  //scale offpart speed
-                  double offPartSpeedMax = offPartDist / 0.2; //mm/s.  Denominator is time in seconds
-
-                  //overwrite offpart speed if necessary
-                  if( options.TransitFeedRate > offPartSpeedMax)
-                  {
-                    //fp.ReplaceArgument(line, "F=", offPartSpeedMax * 60, out string newline);
-                    string newline = $"F={offPartSpeedMax * 60:F0} ; ({offPartSpeedMax:F0} mm/s) ";
-                    result[fCodeLineNumber] = newline;
-                  }
-                  state = 1; //you've satisfied state 0, jump into state 1;
-                }
-                break;
-              }
-          }
         }
         return result;
       }
@@ -653,10 +631,8 @@ namespace ToddUtils
       progressBar.Value = 0;
       output = ApplyFeedrate(output, options); progressBar.Value += 10;
       output = ApplyProcessItems(output, options); progressBar.Value += 10;
-      output = ApplyBlockSpacingRules(output, options); progressBar.Value += 10;
       output = ApplyInterpolationMode(output, options); progressBar.Value += 10;
       output = ApplyUVParameters(output, options); progressBar.Value += 10;
-      output = SetOffPartTime(output, options); progressBar.Value += 10;
       output = InsertM61(output, options); progressBar.Value += 10;
       output = RenumberPartProgram(output); progressBar.Value += 10;
       List<string> summary = CollectStats(output); progressBar.Value += 10;
@@ -687,6 +663,173 @@ namespace ToddUtils
       }
       progressBar.Value = progressBar.Maximum;
     }
-    
+    internal static List<string> evenOutBlockSpacing(string fileName, ProgramTuningOptions opts, ProgressBar progressBar1)
+    {
+      List<string> output = File.ReadAllLines(fileName).ToList();
+      int state = 0;
+      int coursenum = 1;
+
+
+      bool isMotionLine(string line)
+      {
+        return line.Contains("G1") || line.Contains("G9");
+      }
+      double dist(cMotionArguments lastPoint, cMotionArguments thisPoint)
+      {
+        return thisPoint.DIST - lastPoint.DIST;
+      }
+      void insertLines(cMotionArguments lastPoint, cMotionArguments thisPoint, List<string> result)
+      {//N46 G1 X=-533.30000 Y=37.80015 Z=44.62500 RX=-0.5903670 RY=0.0000000 RZ=0.0000000 ROTX=DC(-0.59037) DIST=70.000 ; (70.000)
+        double dx = thisPoint.X - lastPoint.X;
+        double dy = thisPoint.Y - lastPoint.Y;
+        double dz = thisPoint.Z - lastPoint.Z;
+        double du = thisPoint.ROTX - lastPoint.ROTX;
+        double drx = thisPoint.RX - lastPoint.RX;
+        double dry = thisPoint.RY - lastPoint.RY;
+        double drz = thisPoint.RZ - lastPoint.RZ;
+        double dist = Math.Sqrt(dx * dx + dy * dy + dz * dz);
+        double dDist = thisPoint.DIST - lastPoint.DIST;
+        int numInserts = (int)(dDist / 1.0);
+        for (int i = 1; i <= numInserts; i++)
+        {
+          double ratio = (double)i / (numInserts + 1);
+          cMotionArguments newArgs = new cMotionArguments();
+          newArgs.X = lastPoint.X + ratio * dx;
+          newArgs.Y = lastPoint.Y + ratio * dy;
+          newArgs.Z = lastPoint.Z + ratio * dz;
+          newArgs.ROTX = lastPoint.ROTX + ratio * du;
+          newArgs.RX = lastPoint.RX + ratio * drx;
+          newArgs.RY = lastPoint.RY + ratio * dry;
+          newArgs.RZ = lastPoint.RZ + ratio * drz;
+          newArgs.DIST = lastPoint.DIST + ratio * dDist;
+
+          result.Add($"G1 X={newArgs.X:F5} Y={newArgs.Y:F5} Z={newArgs.Z:F5} RX={newArgs.RX:F5} RY={newArgs.RY:F5} RZ={newArgs.RZ:F5} ROTX=DC({newArgs.ROTX:F5}) DIST={newArgs.DIST:F3} ; ");
+        }
+      }
+
+      List<string> result = new List<string>();
+      cMotionArguments args = new cMotionArguments();
+      for (int i = 0; i < output.Count; i++)
+      {
+        progressBar1.Value = 100 * i / output.Count;
+        string line = output[i];
+
+
+        if (true || coursenum < 5)
+        {
+          switch (state)
+          {
+            case 0: //off part
+              if (isMotionLine(line) && line.Contains("DIST="))
+              {
+                args = cMotionArguments.getMotionArguments(line);
+                coursenum++;
+                state = 1;
+              }
+              result.Add(line);
+              break;
+            case 1: //on part
+              if (isMotionLine(line))
+              {
+                Console.WriteLine(line);
+                if (!line.Contains("DIST="))
+                {
+                  state = 0;
+                }
+                else
+                {
+                  string nextStartMotionBlock = line;
+                  for (int j = i; j < output.Count; j++)
+                  {
+                    string jline = output[j];
+
+                    if (isMotionLine(jline))
+                    {
+                      if (!jline.Contains("DIST="))
+                      {
+                        state = 0;
+                        i = j;
+                        result.Add(jline);
+                        break;
+                      }
+                      nextStartMotionBlock = jline;
+                      cMotionArguments nextArgs = cMotionArguments.getMotionArguments(jline);
+                      if (dist(args, nextArgs) > 1.1)
+                      {
+                        insertLines(args, nextArgs, result);
+                      }
+                      result.Add(jline);
+                      args = cMotionArguments.getMotionArguments(nextStartMotionBlock);
+                    }
+                    else
+                    {
+                      result.Add(jline);
+                    }
+                  }
+                  break;
+                }
+              }
+              else
+              {
+                result.Add(line);
+              }
+              break;
+          }
+        }
+      }
+      progressBar1.Value = 100;
+      return result;
+    }
+
+    internal static void unwindPPG(string fileName, string outputFileName, ProgramTuningOptions opts, ProgressBar progressBar1)
+    {
+      List<string> output = File.ReadAllLines(fileName).ToList();
+      int state = 0;
+      int coursenum = 1;
+      double distStart = 0;
+      for (int i = 0; i < output.Count; i++)
+      {
+        string line = output[i];
+        switch (state)
+        {
+          case 0:
+            if ((line.Contains("G1") || line.Contains("G9")) && line.Contains("DIST="))
+            {
+              cMotionArguments args = cMotionArguments.getMotionArguments(line);
+              distStart = args.DIST;
+              state = 1;
+            }
+            break;
+          case 1:
+            if (line.Contains("G1") || line.Contains("G9"))
+            {
+              if (!line.Contains("DIST="))
+              {
+                state = 0;
+                coursenum++;
+                if (coursenum > 10)
+                {
+                  //that's enough data
+                  return;
+                }
+              }
+              else
+              {
+                string transformToString(cTransform x)
+                {
+                  string result;
+                  result = $"{x.x:F3},{x.y:F3},{x.z:F3},{x.rx:F3},{x.ry:F3},{x.rz:F3}";
+                  return result;
+                }
+                cMotionArguments args = cMotionArguments.getMotionArguments(line);
+                cTransform rotx = new cTransform(0, 0, 0, -args.ROTX, 0, 0);
+                cTransform xPose = rotx * new cTransform(args.X, args.Y, args.Z, args.RX, args.RY, args.RZ);
+                Console.WriteLine($"{coursenum},{(args.DIST - distStart):F3},{transformToString(xPose)}");
+              }
+            }
+            break;
+        }
+      }
+    }
   }
 }
