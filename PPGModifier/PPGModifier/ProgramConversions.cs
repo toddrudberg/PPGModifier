@@ -424,6 +424,7 @@ namespace ToddUtils
           string newline = line;
           if( line.Contains("FEED"))
           {
+            result.Add($"UVMULT={options.UVMult:F3}");
             getReadyforCut = true;
           }
           if(getReadyforCut && line.Contains("G9"))

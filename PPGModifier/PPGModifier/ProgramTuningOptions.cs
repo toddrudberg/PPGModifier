@@ -124,8 +124,8 @@ public sealed class ProgramTuningOptions
 
   [Category(categoryUVLaserSettings), DisplayName("2 - UV Tack Dose mJ/cm²")]
   [Description("Default: 100.0")]
-  [DefaultValue(12.5)]
-  public double UVLaserTackDose { get; set; } = 12.5d;
+  [DefaultValue(100.0)]
+  public double UVLaserTackDose { get; set; } = 100d;
 
   [Category(categoryUVLaserSettings), DisplayName("3 - UV Course Dose mJ/cm²")]
   [DefaultValue(67.5)]
