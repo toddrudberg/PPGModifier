@@ -196,6 +196,11 @@ namespace ToddUtils
                 //throw this line out
                 thisline = $"; {thisline} ; throwing out this F command.";
               }
+              if( line.Contains("G9"))
+              {
+                thisline = line;
+                result.Add($"F{(options.ApproachFeedrate * 60):F0} ; Approach Feedrate {options.ApproachFeedrate} mm/s");
+              }
               if (line.Contains("FEED"))
               {
                 //result.Add(line); //poop out the FEED command Feedrate must be before the FEED command!
@@ -430,7 +435,7 @@ namespace ToddUtils
           if(getReadyforCut && line.Contains("G9"))
           {
             result.Add(line);
-            newline = $"UVMULT={options.UVMult / 100.0:F3}"; //turning it off for a test.  Does the UV laser tack it down good enough?  
+            newline = $"UVMULT={options.UVMult:F3}"; //turning it off for a test.  Does the UV laser tack it down good enough?  
             getReadyforCut=false;
           }
           if( line.Contains(" UV_MAP_LEADING("))

@@ -18,11 +18,15 @@ public sealed class ProgramTuningOptions
   [DefaultValue(400.0)]
   public double OnCourseFeedRate { get; set; } = 400d;
 
-  [Category("Feed Rates"), DisplayName("4 - Exit Feedrate (mm/s)"), Description("Exit FeedRate (500 mm/s max, 50 default).  From the end of cut to end of part.  Especially effective during stop on cut.  A slower speed straightens the tails and allows more UV cure which holds the ends down and makes subsquent layers easier to print.")]
-  [DefaultValue(75.0)]
-  public double ExitFeedRate { get; set; } = 75d;
+  [Category("Feed Rates"), DisplayName("4 - Exit Feedrate (mm/s)"), Description("Exit FeedRate (500 mm/s max, 150 default).  From the end of cut to end of part.  Especially effective during stop on cut.  A slower speed straightens the tails and allows more UV cure which holds the ends down and makes subsquent layers easier to print.")]
+  [DefaultValue(150.0)]
+  public double ExitFeedRate { get; set; } = 150d;
 
-  [Category("Feed Rates"), DisplayName("5 - Transit Feedrate (mm/s)"), Description("Rapid traverse speed (1500 mm/s max).")]
+  [Category("Feed Rates"), DisplayName("5 - Approach Feedrate (mm/s)"), Description("Approach FeedRate (500 mm/s max, 150 default).")]
+  [DefaultValue(150.0)]
+  public double ApproachFeedrate { get; set; } = 150d;
+
+  [Category("Feed Rates"), DisplayName("6 - Transit Feedrate (mm/s)"), Description("Rapid traverse speed (1500 mm/s max).")]
   [DefaultValue(1500.0)]
   public double TransitFeedRate { get; set; } = 1500d;
 
