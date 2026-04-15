@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing.Drawing2D;
@@ -330,6 +331,7 @@ namespace ToddUtils
                   step++;
                 else if( line.Contains("G9"))
                 {
+                  result.Add("G4 F0.200 ; make the machine actually stop");
                   result.Add("SOFT ; (soften the cut accel and offpart move)");
                   
                   step++;
@@ -859,15 +861,89 @@ namespace ToddUtils
       return result;
     }
 
+
+
+
+
+
+    public static class QuickPrompt
+    {
+      public static (string layer, string path)? Get()
+      {
+        using (var f = new Form())
+        {
+          f.Text = "Enter Values";
+          f.Width = 300;
+          f.Height = 160;
+          f.FormBorderStyle = FormBorderStyle.FixedDialog;
+          f.StartPosition = FormStartPosition.CenterScreen;
+          f.MaximizeBox = false;
+          f.MinimizeBox = false;
+
+          var lblLayer = new Label() { Text = "LAYER", Left = 10, Top = 10, Width = 80 };
+          var txtLayer = new TextBox() { Left = 100, Top = 10, Width = 150 };
+
+          var lblCourse = new Label() { Text = "PATH", Left = 10, Top = 40, Width = 80 };
+          var txtCourse = new TextBox() { Left = 100, Top = 40, Width = 150 };
+
+          var ok = new Button() { Text = "OK", Left = 100, Width = 70, Top = 75, DialogResult = DialogResult.OK };
+          var cancel = new Button() { Text = "Cancel", Left = 180, Width = 70, Top = 75, DialogResult = DialogResult.Cancel };
+
+          f.Controls.AddRange(new Control[] { lblLayer, txtLayer, lblCourse, txtCourse, ok, cancel });
+          f.AcceptButton = ok;
+          f.CancelButton = cancel;
+
+          if (f.ShowDialog() == DialogResult.OK)
+          {
+            if (string.IsNullOrWhiteSpace(txtLayer.Text) || string.IsNullOrWhiteSpace(txtCourse.Text))
+              return null;
+
+            return (txtLayer.Text, txtCourse.Text);
+          }
+
+          return null;
+        }
+      }
+    }
+
+
     internal static void unwindPPG(string fileName, string outputFileName, ProgramTuningOptions opts, ProgressBar progressBar1)
     {
+
+      //var result = PromptExample.GetUserInput();
+
+      var r = QuickPrompt.Get();
+      if (r == null) return;
+
+      var (layer, path) = r.Value;
+
       List<string> output = File.ReadAllLines(fileName).ToList();
+      //LAYER3_PATH1: WHEN TRUE DO LAYER=3 PATH=1
+      string searchString = $"LAYER{layer}_PATH{path}: WHEN TRUE DO LAYER={layer} PATH={path}";
+      int startLine = 0;
+      for (startLine = 0; startLine < output.Count; startLine++)
+      {
+        string line = output[startLine];
+        if( line.Contains(searchString))
+        {
+          break;
+        }
+      }
+
       int state = 0;
       int coursenum = 1;
       double distStart = 0;
-      for (int i = 0; i < output.Count; i++)
+      double distLast = 0;
+      cTransform lastPose = new cTransform();
+      List<string> allthedata = new List<string>();
+      Console.WriteLine("Course,DIST,X,Y,Z,rX,rY,rZ,dx/dd,dy/dd,dz/dd,drx/dd,dry/dd,drz/dd");
+      allthedata.Add("Course,DIST,X,Y,Z,rX,rY,rZ,dx/dd,dy/dd,dz/dd,drx/dd,dry/dd,drz/dd");
+      bool firstPoint = true;
+      
+      for (int i = startLine; i < output.Count; i++)
       {
         string line = output[i];
+
         switch (state)
         {
           case 0:
@@ -875,6 +951,9 @@ namespace ToddUtils
             {
               cMotionArguments args = cMotionArguments.getMotionArguments(line);
               distStart = args.DIST;
+              distLast = args.DIST;
+              firstPoint = true;
+              lastPose = new cTransform(args.X, args.Y, args.Z, args.RX, args.RY, args.RZ);
               state = 1;
             }
             break;
@@ -883,13 +962,10 @@ namespace ToddUtils
             {
               if (!line.Contains("DIST="))
               {
-                state = 0;
-                coursenum++;
-                if (coursenum > 10)
-                {
-                  //that's enough data
-                  return;
-                }
+                //that's enough data
+                Clipboard.SetText(string.Join(Environment.NewLine, allthedata).Replace(",", "\t"));
+                MessageBox.Show($"Data for LAYER_{layer} and PATH_{path} is copied to copy buffer!");
+                return;                
               }
               else
               {
@@ -902,7 +978,24 @@ namespace ToddUtils
                 cMotionArguments args = cMotionArguments.getMotionArguments(line);
                 cTransform rotx = new cTransform(0, 0, 0, -args.ROTX, 0, 0);
                 cTransform xPose = rotx * new cTransform(args.X, args.Y, args.Z, args.RX, args.RY, args.RZ);
-                Console.WriteLine($"{coursenum},{(args.DIST - distStart):F3},{transformToString(xPose)}");
+                double dx = lastPose.x - xPose.x;
+                double dy = lastPose.y - xPose.y;
+                double dz = lastPose.z - xPose.z;
+                double drx = lastPose.rx - xPose.rx;
+                double dry = lastPose.ry - xPose.ry;
+                double drz = lastPose.rz - xPose.rz;
+                if (firstPoint)
+                {
+                  dx = dy = dz = drx = dry = drz = 0;
+                  firstPoint = false;
+                }
+                lastPose = new cTransform(xPose.x, xPose.y, xPose.z, xPose.rx, xPose.ry, xPose.rz);
+                double dDist = distLast - args.DIST;
+                distLast = args.DIST;
+                if (distLast < 1.0e-6)
+                  distLast = 1.0e-6;
+                Console.WriteLine($"{coursenum},{(args.DIST - distStart):F3},{transformToString(xPose)},{dx / dDist:F3}, {dy / dDist:F3}, {dz / dDist:F3},{drx / dDist:F3}, {dry / dDist:F3}, {drz / dDist:F3},");
+                allthedata.Add($"{coursenum},{(args.DIST - distStart):F3},{transformToString(xPose)},{dx / dDist:F3}, {dy / dDist:F3}, {dz / dDist:F3},{drx / dDist:F3}, {dry / dDist:F3}, {drz / dDist:F3},");
               }
             }
             break;
