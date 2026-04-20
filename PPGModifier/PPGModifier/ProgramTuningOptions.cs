@@ -73,6 +73,10 @@ public sealed class ProgramTuningOptions
   [Category("Logic"), DisplayName("Stop on Cut"), Description("2 - Required for all non-cut-on-the-fly machines.  Currently only Mercury will get this upgrade.")]
   [DefaultValue(true)]
   public bool StopOnCut { get; set; } = true;
+
+  [Category("Logic"), DisplayName("Use Engineering Headers"), Description("3 - Experimental outputs engineering machine only!")]
+  [DefaultValue(false)]
+  public bool EngineeringMachine { get; set; } = false;
   #endregion
 
   #region UV Control
