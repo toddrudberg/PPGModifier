@@ -21,133 +21,6 @@ namespace ToddUtils
 {
   public class ProgramConversions
   {
-
-    //internal static List<string> evenOutBlockSpacingSafe(string fileName, ProgramTuningOptions opts, ProgressBar progressBar1)
-    //{
-    //  List<string> input = File.ReadAllLines(fileName).ToList();
-    //  List<string> result = new List<string>(input.Count);
-
-    //  bool onPart = false;
-    //  int courseNum = 0;
-    //  cMotionArguments? lastArgs = null;
-
-    //  bool IsMotionLine(string line)
-    //  {
-    //    return line.Contains("G1") || line.Contains("G9");
-    //  }
-
-    //  bool HasDist(string line)
-    //  {
-    //    return line.Contains("DIST=");
-    //  }
-
-    //  bool IsSafeToInsert(cMotionArguments a, cMotionArguments b)
-    //  {
-    //    double dDist = b.DIST - a.DIST;
-    //    double dRx = Math.Abs(b.RX - a.RX);
-    //    double dRy = Math.Abs(b.RY - a.RY);
-    //    double dRz = Math.Abs(b.RZ - a.RZ);
-    //    double dRotx = Math.Abs(b.ROTX - a.ROTX);
-
-    //    // Conservative rule:
-    //    // only densify if the DIST gap is meaningfully large
-    //    // and the attitude change is small enough that straight interpolation is believable.
-    //    return dDist > 1.1 &&
-    //           dRx < 2.0 &&
-    //           dRy < 2.0 &&
-    //           dRz < 2.0 &&
-    //           dRotx < 2.0;
-    //  }
-
-    //  void InsertLines(cMotionArguments lastPoint, cMotionArguments thisPoint, List<string> target)
-    //  {
-    //    double dx = thisPoint.X - lastPoint.X;
-    //    double dy = thisPoint.Y - lastPoint.Y;
-    //    double dz = thisPoint.Z - lastPoint.Z;
-    //    double dRotx = thisPoint.ROTX - lastPoint.ROTX;
-    //    double dRx = thisPoint.RX - lastPoint.RX;
-    //    double dRy = thisPoint.RY - lastPoint.RY;
-    //    double dRz = thisPoint.RZ - lastPoint.RZ;
-    //    double dDist = thisPoint.DIST - lastPoint.DIST;
-
-    //    // Aim for roughly 1.0 DIST spacing without creating an extra point
-    //    // when the gap is only slightly over 1.0.
-    //    int numInserts = Math.Max(0, (int)Math.Floor(dDist) - 1);
-
-    //    for (int i = 1; i <= numInserts; i++)
-    //    {
-    //      double ratio = (double)i / (numInserts + 1);
-
-    //      cMotionArguments newArgs = new cMotionArguments
-    //      {
-    //        X = lastPoint.X + ratio * dx,
-    //        Y = lastPoint.Y + ratio * dy,
-    //        Z = lastPoint.Z + ratio * dz,
-    //        ROTX = lastPoint.ROTX + ratio * dRotx,
-    //        RX = lastPoint.RX + ratio * dRx,
-    //        RY = lastPoint.RY + ratio * dRy,
-    //        RZ = lastPoint.RZ + ratio * dRz,
-    //        DIST = lastPoint.DIST + ratio * dDist
-    //      };
-
-    //      target.Add(
-    //        $"G1 X={newArgs.X:F5} Y={newArgs.Y:F5} Z={newArgs.Z:F5} " +
-    //        $"RX={newArgs.RX:F5} RY={newArgs.RY:F5} RZ={newArgs.RZ:F5} " +
-    //        $"ROTX=DC({newArgs.ROTX:F5}) DIST={newArgs.DIST:F3} ; ");
-    //    }
-    //  }
-
-    //  for (int i = 0; i < input.Count; i++)
-    //  {
-    //    progressBar1.Value = 100 * i / input.Count;
-    //    string line = input[i];
-
-    //    // Default behavior: preserve every line unless we intentionally insert before it.
-    //    if (!IsMotionLine(line))
-    //    {
-    //      // Break interpolation continuity across non-motion lines.
-    //      onPart = false;
-    //      lastArgs = null;
-    //      result.Add(line);
-    //      continue;
-    //    }
-
-    //    if (!HasDist(line))
-    //    {
-    //      // Motion line, but not one of the on-part DIST blocks.
-    //      // Treat as a hard boundary to avoid interpolating across feed/dwell/modal changes.
-    //      onPart = false;
-    //      lastArgs = null;
-    //      result.Add(line);
-    //      continue;
-    //    }
-
-    //    cMotionArguments currentArgs = cMotionArguments.getMotionArguments(line);
-
-    //    if (!onPart || lastArgs == null)
-    //    {
-    //      // Start of a new contiguous on-part motion run.
-    //      onPart = true;
-    //      courseNum++;
-    //      lastArgs = currentArgs;
-    //      result.Add(line);
-    //      continue;
-    //    }
-
-    //    if (IsSafeToInsert(lastArgs, currentArgs))
-    //    {
-    //      InsertLines(lastArgs, currentArgs, result);
-    //    }
-
-    //    result.Add(line);
-    //    lastArgs = currentArgs;
-    //  }
-
-    //  progressBar1.Value = 100;
-    //  return result;
-    //}
-
-
     internal static void updateProgram(string filename, string outputFilename, ProgramTuningOptions options, ProgressBar progressBar)
     {
       string numberFormat = "F6";
@@ -210,7 +83,7 @@ namespace ToddUtils
                 {
                   onCourseFeedRate = options.OnCourseFeedRateFirstLayer;
                 }
-                thisline = $"F={(onCourseFeedRate * 60):F0} ; ({onCourseFeedRate} mm/s On-course Feedrate for {(firstLayer == true ? "First Layer" : "2nd Layer and up")} - note must be prior to FEED)";
+                thisline = $"F={(onCourseFeedRate * 60):F0} ; ({onCourseFeedRate} mm/s On-course Feedrate for {(firstLayer == true ? "First Layer" : "2nd Layer and up")} - note must be prior to fekd)";
                 result.Add(thisline);
                 thisline = line;
                 step++;
@@ -425,19 +298,31 @@ namespace ToddUtils
         */
 
         bool getReadyforCut = false;
+        bool findFirstUVMult = true;
         for (int ii = 0; ii < output.Count; ii++)
         {
           string line = output[ii];
           string newline = line;
+
+          if(findFirstUVMult && line.Contains("UVMULT"))
+          {
+            result.Add($"WHEN TRUE DO UVMULTTACK={options.UVMult:F3}");
+            findFirstUVMult =false;
+          }
           if( line.Contains("FEED"))
           {
-            result.Add($"UVMULT={options.UVMult:F3}");
+            if( !options.UseUVLaser)
+              result.Add($"UVMULT={options.UVMult:F3} ; on for non UV laser operations");
+            else
+              result.Add($"UVMULT={0.0:F3} ; off for UV laser operations");
+
+            result.Add($"UVMULTTACK={options.UVMult:F3} ; feed UV tack settings");
             getReadyforCut = true;
           }
           if(getReadyforCut && line.Contains("G9"))
           {
             result.Add(line);
-            newline = $"UVMULT={options.UVMult:F3}"; //turning it off for a test.  Does the UV laser tack it down good enough?  
+            newline = $"UVMULTTACK={options.UVMult:F3} ; cut UV tack settings"; //turning it off for a test.  Does the UV laser tack it down good enough?  
             getReadyforCut=false;
           }
           if( line.Contains(" UV_MAP_LEADING("))
@@ -456,11 +341,11 @@ namespace ToddUtils
           {
             newline = CalculateUVParameters("TACK_UV_MAP_TRAILING", options.UVTackSlope, (double)options.UVTackOffset);
           }
-          else if (line.Contains("UVMULT="))
-          {
-            fp.GetArgument(newline, "N", out double Nnum, false);
-            newline = $"N{(int)Nnum} UVMULT={options.UVMult:F3}";
-          }
+          //else if (line.Contains("UVMULT="))
+          //{
+          //  fp.GetArgument(newline, "N", out double Nnum, false);
+          //  newline = $"N{(int)Nnum} UVMULT={options.UVMult:F3}";
+          //}
           result.Add(newline);
         }
 
@@ -703,19 +588,104 @@ namespace ToddUtils
         result.Add($"There are {activeLayer} Layers and {totalPaths+=activePath} Paths");
         return result;
       }
-      #endregion
 
-      progressBar.Value = 0;
+      List<string> ApplyUVBulbOnEdges(List<string> output, ProgramTuningOptions options, List<string> summary)
+      {
+        List<string> result = new List<string>();
+        List<string> frontEndItems = new List<string>();
+        List<string> backEndItems = new List<string>();
+        int numCoursesToCook = 3;
+
+        foreach (string s in summary)
+        {
+          if (!s.StartsWith("Layer"))
+            continue;
+          //Layer: 1 has 175 Paths
+          string[] parts = s.Split(' ');
+          int layer = int.Parse(parts[1]);
+          int path = int.Parse(parts[3]);
+          
+          for(int ii = 0; ii < numCoursesToCook; ii++)
+          {
+            //LAYER1_PATH47:
+            string searchLine = $"LAYER{layer}_PATH{ii+1}";
+            frontEndItems.Add(searchLine);
+
+            searchLine = $"LAYER{layer}_PATH{path - ii}";
+            backEndItems.Add(searchLine);
+          }
+        }
+
+        List<int> indecesToModify = new List<int>();
+        foreach (string fe in frontEndItems)
+        {
+          int index = output.FindIndex(s => s.Contains(fe));
+          indecesToModify.Add(index);
+        }
+        foreach (string be in backEndItems)
+        {
+          int index = output.FindIndex(s => s.Contains(be));
+          indecesToModify.Add(index);
+        }
+
+        indecesToModify.Sort();
+
+        int curIndex = 0;
+        bool lookForFeed = false;
+        for( int ii = 0; ii < output.Count; ii++)
+        {
+          
+          string line = output[ii];
+
+          if ( curIndex < indecesToModify.Count && ii == indecesToModify[curIndex])
+          {
+            lookForFeed = true;
+          }
+
+          if( lookForFeed)
+          {
+            if(line.Contains("UVMULT="))
+            {
+              fp.ReplaceArgument(line, "UVMULT=", options.UVMult, out line);
+              line += $" ; UVMULT on for {numCoursesToCook} courses at the edge of ply";
+            }
+            if( line.Contains("FEED"))
+            {
+              
+              lookForFeed = false;
+              curIndex++;
+            }
+          }
+
+          result.Add(line);
+        }
+       
+        return result;
+      }
+    #endregion
+
+    progressBar.Value = 0;
       output = ApplyFeedrate(output, options); progressBar.Value += 10;
       output = ApplyProcessItems(output, options); progressBar.Value += 10;
       output = ApplyInterpolationMode(output, options); progressBar.Value += 10;
+
+
       output = ApplyUVParameters(output, options); progressBar.Value += 10;
       output = InsertM61(output, options); progressBar.Value += 10;
       output = ApplyUVLaserSettings(output, options);
+
       output = ApplySmoothAccelerationParameters(output, options);
       //finished adding lines, now renumber the part program
       output = RenumberPartProgram(output); progressBar.Value += 10;
       List<string> summary = CollectStats(output); progressBar.Value += 10;
+
+      if (options.UseUVLaser)
+      {
+        output = ApplyUVBulbOnEdges(output, options, summary);
+      }
+      output = RenumberPartProgram(output); progressBar.Value += 10;
+
+
 
       //output the results:
       string text = string.Join(Environment.NewLine, output);
@@ -743,6 +713,9 @@ namespace ToddUtils
       }
       progressBar.Value = progressBar.Maximum;
     }
+
+
+
     internal static List<string> evenOutBlockSpacing(string fileName, ProgramTuningOptions opts, ProgressBar progressBar1)
     {
       List<string> output = File.ReadAllLines(fileName).ToList();
@@ -861,11 +834,6 @@ namespace ToddUtils
       return result;
     }
 
-
-
-
-
-
     public static class QuickPrompt
     {
       public static (string layer, string path)? Get()
@@ -905,7 +873,6 @@ namespace ToddUtils
         }
       }
     }
-
 
     internal static void unwindPPG(string fileName, string outputFileName, ProgramTuningOptions opts, ProgressBar progressBar1)
     {
