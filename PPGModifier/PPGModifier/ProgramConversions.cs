@@ -47,7 +47,7 @@ namespace ToddUtils
         foreach (string line in output)
         {
           string thisline = line;
-          if(firstLayer && thisline.Contains("LAYER2"))
+          if (firstLayer && thisline.Contains("LAYER2"))
           {
             firstLayer = false;
           }
@@ -59,7 +59,7 @@ namespace ToddUtils
                 fp.ReplaceArgument(line, "F=", options.TransitFeedRate * 60, out string newline, "F0");
                 thisline = $"{newline} ; ({options.TransitFeedRate} mm/s Transit Feedrate)";
               }
-              if( line.Contains("APPROACH"))
+              if (line.Contains("APPROACH"))
               {
                 result.Add(line);
                 thisline = $"F={options.TransitFeedRate * 60:F0} ; ({options.TransitFeedRate} mm/s Transit Feedrate)";
@@ -67,12 +67,12 @@ namespace ToddUtils
               }
               break;
             case 1:
-              if( line.Contains("F="))
+              if (line.Contains("F="))
               {
                 //throw this line out
                 thisline = $"; {thisline} ; throwing out this F command.";
               }
-              if( line.Contains("G9"))
+              if (line.Contains("G9"))
               {
                 thisline = line;
                 result.Add($"F{(options.ApproachFeedrate * 60):F0} ; Approach Feedrate {options.ApproachFeedrate} mm/s");
@@ -85,7 +85,7 @@ namespace ToddUtils
                 {
                   onCourseFeedRate = options.OnCourseFeedRateFirstLayer;
                 }
-                thisline = $"F={(onCourseFeedRate * 60):F0} ; ({onCourseFeedRate} mm/s On-course Feedrate for {(firstLayer == true ? "First Layer" : "2nd Layer and up")}";
+                thisline = $"F={(onCourseFeedRate * 60):F0} ; ({onCourseFeedRate} mm/s On-course Feedrate for {(firstLayer == true ? "First Layer" : "2nd Layer and up")})";
                 result.Add(thisline);
                 thisline = line;
                 step++;
@@ -103,7 +103,7 @@ namespace ToddUtils
                 fp.ReplaceArgument(line, "F=", onCourseFeedRate * 60, out string newline, "F0");
                 thisline = $"{newline} ; ({onCourseFeedRate} mm/s On-course Feedrate)";
               }
-              if( line.Contains("G9"))
+              if (line.Contains("G9"))
               {
                 result.Add(thisline); //poop out the G9 line
                 thisline = $"F={(options.ExitFeedRate * 60):F0} ;  ({options.ExitFeedRate} mm/s Exit Feedrate)";   //add the exit feedrate           
