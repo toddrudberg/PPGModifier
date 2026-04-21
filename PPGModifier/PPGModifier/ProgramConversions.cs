@@ -578,6 +578,80 @@ namespace ToddUtils
         result.Add($"There are {activeLayer} Layers and {totalPaths+=activePath} Paths");
         return result;
       }
+
+      List<string> ApplyUVBulbOnEdges(List<string> output, ProgramTuningOptions options, List<string> summary)
+      {
+        List<string> result = new List<string>();
+        List<string> frontEndItems = new List<string>();
+        List<string> backEndItems = new List<string>();
+        int numCoursesToCook = 3;
+
+        foreach (string s in summary)
+        {
+          if (!s.StartsWith("Layer"))
+            continue;
+          //Layer: 1 has 175 Paths
+          string[] parts = s.Split(' ');
+          int layer = int.Parse(parts[1]);
+          int path = int.Parse(parts[3]);
+
+          for (int ii = 0; ii < numCoursesToCook; ii++)
+          {
+            //LAYER1_PATH47:
+            string searchLine = $"LAYER{layer}_PATH{ii + 1}";
+            frontEndItems.Add(searchLine);
+
+            searchLine = $"LAYER{layer}_PATH{path - ii}";
+            backEndItems.Add(searchLine);
+          }
+        }
+
+        List<int> indecesToModify = new List<int>();
+        foreach (string fe in frontEndItems)
+        {
+          int index = output.FindIndex(s => s.Contains(fe));
+          indecesToModify.Add(index);
+        }
+        foreach (string be in backEndItems)
+        {
+          int index = output.FindIndex(s => s.Contains(be));
+          indecesToModify.Add(index);
+        }
+
+        indecesToModify.Sort();
+
+        int curIndex = 0;
+        bool lookForFeed = false;
+        for (int ii = 0; ii < output.Count; ii++)
+        {
+
+          string line = output[ii];
+
+          if (curIndex < indecesToModify.Count && ii == indecesToModify[curIndex])
+          {
+            lookForFeed = true;
+          }
+
+          if (lookForFeed)
+          {
+            if (line.Contains("UVMULT="))
+            {
+              fp.ReplaceArgument(line, "UVMULT=", options.UVMult, out line);
+              line += $" ; UVMULT on for {numCoursesToCook} courses at the edge of ply";
+            }
+            if (line.Contains("FEED"))
+            {
+
+              lookForFeed = false;
+              curIndex++;
+            }
+          }
+
+          result.Add(line);
+        }
+
+        return result;
+      }
       #endregion
 
       progressBar.Value = 0;
