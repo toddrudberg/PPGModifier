@@ -312,7 +312,7 @@ namespace ToddUtils
           if(getReadyforCut && line.Contains("G9"))
           {
             result.Add(line);
-            newline = $"UVMULT={options.UVMult:F3}"; //turning it off for a test.  Does the UV laser tack it down good enough?  
+            newline = $"UVMULT={options.UVMultTails:F3}"; //turning it off for a test.  Does the UV laser tack it down good enough?  
             getReadyforCut=false;
           }
           if( line.Contains(" UV_MAP_LEADING("))
@@ -331,11 +331,11 @@ namespace ToddUtils
           {
             newline = CalculateUVParameters("TACK_UV_MAP_TRAILING", options.UVTackSlope, (double)options.UVTackOffset);
           }
-          else if (line.Contains("UVMULT="))
-          {
-            fp.GetArgument(newline, "N", out double Nnum, false);
-            newline = $"N{(int)Nnum} UVMULT={options.UVMult:F3}";
-          }
+          //else if (line.Contains("UVMULT="))
+          //{
+          //  fp.GetArgument(newline, "N", out double Nnum, false);
+          //  newline = $"N{(int)Nnum} UVMULT={options.UVMult:F3}";
+          //}
           result.Add(newline);
         }
 

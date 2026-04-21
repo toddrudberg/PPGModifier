@@ -90,32 +90,37 @@ public sealed class ProgramTuningOptions
   [DefaultValue(1.0)]
   public double UVMult { get; set; } = 1.0;
 
-  [Category("UV Control"), DisplayName("3 - Tack offset")]
+  [Category("UV Control"), DisplayName("3 - UVMULT TailsT")]
+  [Description("AERO use 0.10, CEREMAT and others 1.0, if tails too crispy...lower it")]
+  [DefaultValue(1.0)]
+  public double UVMultTails { get; set; } = 1.0;
+
+  [Category("UV Control"), DisplayName("4 - Tack offset")]
   [Description("Default: 5000")]
   [DefaultValue(5000.0)]
   public double UVTackOffset { get; set; } = 5000d;
 
-  [Category("UV Control"), DisplayName("4 - Tack slope")]
+  [Category("UV Control"), DisplayName("5 - Tack slope")]
   [Description("Default: 675")]
   [DefaultValue(675.0)]
   public double UVTackSlope { get; set; } = 675d;
 
-  [Category("UV Control"), DisplayName("5 - Course offset leading")]
+  [Category("UV Control"), DisplayName("6 - Course offset leading")]
   [Description("Default: 1300")]
   [DefaultValue(1300.0)]
   public double UVCourseOffsetLeading { get; set; } = 1300d;
 
-  [Category("UV Control"), DisplayName("6 - Course slope leading")]
+  [Category("UV Control"), DisplayName("7 - Course slope leading")]
   [Description("Default: 100")]
   [DefaultValue(100.0)]
   public double UVCourseSlopeLeading { get; set; } = 100d;
 
-  [Category("UV Control"), DisplayName("7 - Course offset trailing")]
+  [Category("UV Control"), DisplayName("8 - Course offset trailing")]
   [Description("Default: 1300")]
   [DefaultValue(1300.0)]
   public double UVCourseOffsetTrailing { get; set; } = 1300d;
 
-  [Category("UV Control"), DisplayName("8 - Course slope trailing")]
+  [Category("UV Control"), DisplayName("9 - Course slope trailing")]
   [Description("Default: 175")]
   [DefaultValue(175.0)]
   public double UVCourseSlopeTrailing { get; set; } = 175d;
