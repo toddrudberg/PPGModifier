@@ -206,7 +206,7 @@ namespace ToddUtils
                   step++;
                 else if( line.Contains("G9"))
                 {
-                  result.Add("G4 F0.200 ; make the machine actually stop");
+                  result.Add("G4 F0.050 ; make the machine actually stop");
                   result.Add("SOFT ; (soften the cut accel and offpart move)");
                   
                   step++;
@@ -307,29 +307,35 @@ namespace ToddUtils
           if( line.Contains("FEED"))
           {
             result.Add($"UVMULT={options.UVMult:F3}");
+
+            if( options.ApplyUVTackParemters )
+              result.Add($"UVMULTTACK={options.UVMULTTACK:F3}");            
             getReadyforCut = true;
           }
           if(getReadyforCut && line.Contains("G9"))
           {
             result.Add(line);
-            newline = $"UVMULT={options.UVMultTails:F3}"; //turning it off for a test.  Does the UV laser tack it down good enough?  
-            getReadyforCut=false;
+  
+            if(options.ApplyUVTackParemters )
+              newline = $"UVMULTTACK={options.UVMultTails:F3}"; //turning it off for a test.  Does the UV laser tack it down good enough?  
+
+            getReadyforCut = false;
           }
           if( line.Contains(" UV_MAP_LEADING("))
           {
-            newline = CalculateUVParameters("UV_MAP_LEADING", options.UVCourseSlopeLeading, options.UVCourseOffsetLeading);
+            newline = CalculateUVParameters("UV_MAP_LEADING", options.UVCourseSlopeLeading, 0);
           }
           else if( line.Contains(" UV_MAP_TRAILING("))
           {
-            newline = CalculateUVParameters("UV_MAP_TRAILING", options.UVCourseSlopeTrailing, options.UVCourseOffsetTrailing);
+            newline = CalculateUVParameters("UV_MAP_TRAILING", options.UVCourseSlopeTrailing, 0);
           }
           else if (line.Contains(" TACK_UV_MAP_LEADING("))
           {
-            newline = CalculateUVParameters("TACK_UV_MAP_LEADING", options.UVTackSlope, (double)options.UVTackOffset);
+            newline = CalculateUVParameters("TACK_UV_MAP_LEADING", options.UVTackSlope, 0);
           }
           else if (line.Contains(" TACK_UV_MAP_TRAILING("))
           {
-            newline = CalculateUVParameters("TACK_UV_MAP_TRAILING", options.UVTackSlope, (double)options.UVTackOffset);
+            newline = CalculateUVParameters("TACK_UV_MAP_TRAILING", options.UVTackTrailingSlope, 0);
           }
           //else if (line.Contains("UVMULT="))
           //{
@@ -547,14 +553,26 @@ namespace ToddUtils
       {
         List<string> result = new List<string>();
         ToddUtils.FileParser.cFileParse fp = new cFileParse();
+        double towDesnsity = 1.9238e-6; //lbs/mm
 
         int activeLayer = 0;
         int activePath = 0;
         int totalPaths = 0;
-
+        double layerLen = 0;
+        double currentDist = 0;
         foreach (string line in output)
         {
           {
+            if((line.Contains("G1") || line.Contains("G9")) && line.Contains("DIST="))
+            {
+              cMotionArguments args = new cMotionArguments();
+              args = cMotionArguments.getMotionArguments(line);              
+              int start = line.IndexOf('(', 0) + 1;
+              int end = line.IndexOf(")", start);
+              string len = line.Substring(start, end - start);
+              currentDist = double.Parse(len);
+            }
+
             if (line.Contains("LAYER="))
             {
               fp.GetArgument(line, "LAYER=", out double _layerNum, false);
@@ -564,17 +582,22 @@ namespace ToddUtils
 
                 if ((int)_layerNum > 1)
                 {
-                  result.Add($"Layer: {activeLayer} has {activePath} Paths");
+                  result.Add($"Layer: {activeLayer} has {activePath} Paths and places {layerLen:F3}mm of tow and has mass of {layerLen * towDesnsity:F3} lbs.");
+                  layerLen = 0;
                   totalPaths += activePath;
                 }
               }
               activeLayer = (int)_layerNum;
               fp.GetArgument(line, "PATH=", out double _path, false);
+              if( _path != activePath)
+              {
+                layerLen += currentDist;
+              }
               activePath = (int)_path;
             }
           }
         }
-        result.Add($"Layer: {activeLayer} has {activePath} Paths");
+        result.Add($"Layer: {activeLayer} has {activePath} Paths and places {layerLen:F3}mm of tow and has mass of {layerLen * towDesnsity:F3} lbs.\"");
         result.Add($"There are {activeLayer} Layers and {totalPaths+=activePath} Paths");
         return result;
       }
@@ -636,7 +659,7 @@ namespace ToddUtils
           {
             if (line.Contains("UVMULT="))
             {
-              fp.ReplaceArgument(line, "UVMULT=", options.UVMult, out line);
+              fp.ReplaceArgument(line, "UVMULT=", options.UVMultEdge, out line);
               line += $" ; UVMULT on for {numCoursesToCook} courses at the edge of ply";
             }
             if (line.Contains("FEED"))
@@ -665,6 +688,13 @@ namespace ToddUtils
       //finished adding lines, now renumber the part program
       output = RenumberPartProgram(output); progressBar.Value += 10;
       List<string> summary = CollectStats(output); progressBar.Value += 10;
+
+      if (options.ApplyUVEdgeParameters)
+      {
+        output = ApplyUVBulbOnEdges(output, options, summary);
+      }
+      output = RenumberPartProgram(output); progressBar.Value += 10;
+
 
       //output the results:
       string text = string.Join(Environment.NewLine, output);

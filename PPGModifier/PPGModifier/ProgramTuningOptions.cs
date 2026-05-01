@@ -80,50 +80,65 @@ public sealed class ProgramTuningOptions
   #endregion
 
   #region UV Control
-  [Category("UV Control"), DisplayName("1 - Override UV Parameters")]
+  [Category("UV Control"), DisplayName("01 - Override UV Parameters")]
   [Description("You need to override the table to extend speeds to 125mm/s - just do it.")]
   [DefaultValue(true)]
   public bool OverrideUVParameters { get; set; } = true;
 
-  [Category("UV Control"), DisplayName("2 - UVMULT")] 
+  [Category("UV Control"), DisplayName("02 - UVMULT")] 
   [Description("AERO use 0.10, CEREMAT and others 1.0")]
   [DefaultValue(1.0)]
   public double UVMult { get; set; } = 1.0;
 
-  [Category("UV Control"), DisplayName("3 - UVMULT TailsT")]
+
+  [Category("UV Control"), DisplayName("03 - Does this machine have UVMULTTACK?")]
+  [Description("Uses UVMULTTACK & Tails if true.")]
+  [DefaultValue(false)]
+  public bool ApplyUVTackParemters { get; set; } = false;
+  [Category("UV Control"), DisplayName("04 - UVMULT TACK Mult")]
+  [Description("AERO use 0.10, CEREMAT and others 1.0, if edges too soft, raise it.")]
+  [DefaultValue(1.0)]
+  public double UVMULTTACK { get; set; } = 1.0;
+
+  [Category("UV Control"), DisplayName("05 - UVMULT Tails")]
   [Description("AERO use 0.10, CEREMAT and others 1.0, if tails too crispy...lower it")]
   [DefaultValue(1.0)]
   public double UVMultTails { get; set; } = 1.0;
 
-  [Category("UV Control"), DisplayName("4 - Tack offset")]
-  [Description("Default: 5000")]
-  [DefaultValue(5000.0)]
-  public double UVTackOffset { get; set; } = 5000d;
+  [Category("UV Control"), DisplayName("06 - Apply Ply Edge Settings/TACK Mult?")]
+  [Description("Usees UVMUL for the ply Edge if true.")]
+  [DefaultValue(false)]
+  public bool ApplyUVEdgeParameters { get; set; } = false;
 
-  [Category("UV Control"), DisplayName("5 - Tack slope")]
-  [Description("Default: 675")]
-  [DefaultValue(675.0)]
-  public double UVTackSlope { get; set; } = 675d;
+  [Category("UV Control"), DisplayName("07 - UVMULT Edges")]
+  [Description("AERO use 0.10, CEREMAT and others 1.0, if edges too soft, raise it.")]
+  [DefaultValue(1.0)]
+  public double UVMultEdge { get; set; } = 1.0;
 
-  [Category("UV Control"), DisplayName("6 - Course offset leading")]
-  [Description("Default: 1300")]
-  [DefaultValue(1300.0)]
-  public double UVCourseOffsetLeading { get; set; } = 1300d;
+  [Category("UV Control"), DisplayName("08 - Tack slope")]
+  [Description("Default: 1000")]
+  [DefaultValue(1000.0)]
+  public double UVTackSlope { get; set; } = 1000d;
 
-  [Category("UV Control"), DisplayName("7 - Course slope leading")]
+
+  [Category("UV Control"), DisplayName("09 - Tack Trailing slope")]
+  [Description("Default: 1000")]
+  [DefaultValue(1000.0)]
+  public double UVTackTrailingSlope { get; set; } = 1000d;
+
+
+  [Category("UV Control"), DisplayName("10 - Course slope leading")]
   [Description("Default: 100")]
   [DefaultValue(100.0)]
   public double UVCourseSlopeLeading { get; set; } = 100d;
 
-  [Category("UV Control"), DisplayName("8 - Course offset trailing")]
-  [Description("Default: 1300")]
-  [DefaultValue(1300.0)]
-  public double UVCourseOffsetTrailing { get; set; } = 1300d;
-
-  [Category("UV Control"), DisplayName("9 - Course slope trailing")]
+  [Category("UV Control"), DisplayName("11 - Course slope trailing")]
   [Description("Default: 175")]
   [DefaultValue(175.0)]
   public double UVCourseSlopeTrailing { get; set; } = 175d;
+
+ 
+
   #endregion
 
   #region UVLaserSettings
